@@ -1,23 +1,25 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.c - version 1.0.3 */
 
-#include "hack.h"
+#include <stdlib.h>
 #include <stdio.h>
 
-extern char news0();
-extern char *nomovemsg;
-extern char *exclam();
-extern struct obj *addinv();
-extern boolean hmon();
+#include "hack.h"
+
+static void movobj(struct obj *obj, int ox, int oy);
+#ifdef QUEST
+static int rroom(int x, int y);
+#endif
+static int inv_cnt(void);
 
 /* called on movement:
 	1. when throwing ball+chain far away
 	2. when teleporting
 	3. when walking out of a lit room
  */
-unsee() {
-	register x,y;
-	register struct rm *lev;
+void unsee(void) {
+	int x,y;
+	struct rm *lev;
 
 /*
 	if(u.udispl){
@@ -50,10 +52,11 @@ unsee() {
 	in hack.do.c:  seeoff(1) - go up or down the stairs
 	in hack.trap.c:seeoff(1) - fall through trapdoor
  */
-seeoff(mode)	/* 1 to redo @, 0 to leave them */
-{	/* 1 means misc movement, 0 means blindness */
-	register x,y;
-	register struct rm *lev;
+void seeoff(int mode) {
+	/* 1 to redo @, 0 to leave them */
+	/* 1 means misc movement, 0 means blindness */
+	int x,y;
+	struct rm *lev;
 
 	if(u.udispl && mode){
 		u.udispl = 0;
@@ -75,13 +78,12 @@ seeoff(mode)	/* 1 to redo @, 0 to leave them */
 	}
 }
 
-domove()
-{
+void domove(void) {
 	xchar oldx,oldy;
-	register struct monst *mtmp;
-	register struct rm *tmpr,*ust;
+	struct monst *mtmp;
+	struct rm *tmpr,*ust;
 	struct trap *trap;
-	register struct obj *otmp;
+	struct obj *otmp;
 
 	u_wipe_engr(rnd(5));
 
@@ -154,9 +156,9 @@ domove()
 		nomul(0);
 		return;
 	}
-	while(otmp = sobj_at(ENORMOUS_ROCK, u.ux+u.dx, u.uy+u.dy)) {
-		register xchar rx = u.ux+2*u.dx, ry = u.uy+2*u.dy;
-		register struct trap *ttmp;
+	while((otmp = sobj_at(ENORMOUS_ROCK, u.ux+u.dx, u.uy+u.dy))) {
+		xchar rx = u.ux+2*u.dx, ry = u.uy+2*u.dy;
+		struct trap *ttmp;
 		nomul(0);
 		if(isok(rx,ry) && !IS_ROCK(levl[rx][ry].typ) &&
 		    (levl[rx][ry].typ != DOOR || !(u.dx && u.dy)) &&
@@ -166,7 +168,7 @@ domove()
 			    pline("Perhaps that's why you cannot move it.");
 			    goto cannot_push;
 			}
-			if(ttmp = t_at(rx,ry))
+			if((ttmp = t_at(rx,ry)))
 			    switch(ttmp->ttyp) {
 			    case PIT:
 				pline("You push the rock into a pit!");
@@ -306,10 +308,7 @@ domove()
 	if(!Blind) read_engr_at(u.ux,u.uy);
 }
 
-movobj(obj, ox, oy)
-register struct obj *obj;
-register int ox, oy;
-{
+static void movobj(struct obj *obj, int ox, int oy) {
 	/* Some dirty programming to get display right */
 	freeobj(obj);
 	unpobj(obj);
@@ -319,7 +318,7 @@ register int ox, oy;
 	obj->oy = oy;
 }
 
-dopickup(){
+int dopickup(void) {
 	if(!g_at(u.ux,u.uy) && !o_at(u.ux,u.uy)) {
 		pline("There is nothing here to pick up.");
 		return(0);
@@ -332,14 +331,13 @@ dopickup(){
 	return(1);
 }
 
-pickup(all)
-{
-	register struct gold *gold;
-	register struct obj *obj, *obj2;
-	register int wt;
+void pickup(int all) {
+	struct gold *gold;
+	struct obj *obj, *obj2;
+	int wt;
 
 	if(Levitation) return;
-	while(gold = g_at(u.ux,u.uy)) {
+	while((gold = g_at(u.ux,u.uy))) {
 		pline("%ld gold piece%s.", gold->amount, plur(gold->amount));
 		u.ugold += gold->amount;
 		flags.botl = 1;
@@ -350,7 +348,7 @@ pickup(all)
 
 	/* check for more than one object */
 	if(!all) {
-		register int ct = 0;
+		int ct = 0;
 
 		for(obj = fobj; obj; obj = obj->nobj)
 			if(obj->ox == u.ux && obj->oy == u.uy)
@@ -406,7 +404,6 @@ pickup(all)
 		if(wt > 0) {
 			if(obj->quan > 1) {
 				/* see how many we can lift */
-				extern struct obj *splitobj();
 				int savequan = obj->quan;
 				int iw = inv_weight();
 				int qq;
@@ -464,10 +461,10 @@ pickup(all)
 /* stop running if we see something interesting */
 /* turn around a corner if that is the only way we can proceed */
 /* do not turn left or right twice */
-lookaround(){
-register x,y,i,x0,y0,m0,i0 = 9;
-register int corrct = 0, noturn = 0;
-register struct monst *mtmp;
+void lookaround(void) {
+	int x,y,i,x0,y0,m0,i0 = 9;
+	int corrct = 0, noturn = 0;
+	struct monst *mtmp;
 #ifdef lint
 	/* suppress "used before set" message */
 	x0 = y0 = 0;
@@ -495,7 +492,7 @@ register struct monst *mtmp;
 		case '+':
 			if(x != u.ux && y != u.uy) break;
 			if(flags.run != 1) goto stop;
-			/* fall into next case */
+			/* fall through */
 		case CORR_SYM:
 		corr:
 			if(flags.run == 1 || flags.run == 3) {
@@ -559,9 +556,9 @@ register struct monst *mtmp;
 
 /* something like lookaround, but we are not running */
 /* react only to monsters that might hit us */
-monster_nearby() {
-register int x,y;
-register struct monst *mtmp;
+int monster_nearby(void) {
+	int x,y;
+	struct monst *mtmp;
 	if(!Blind)
 	for(x = u.ux-1; x <= u.ux+1; x++) for(y = u.uy-1; y <= u.uy+1; y++){
 		if(x == u.ux && y == u.uy) continue;
@@ -571,12 +568,12 @@ register struct monst *mtmp;
 			(!mtmp->minvis || See_invisible))
 			return(1);
 	}
- return(0);
+	return(0);
 }
 
 #ifdef QUEST
-cansee(x,y) xchar x,y; {
-register int dx,dy,adx,ady,sdx,sdy,dmax,d;
+int cansee(xchar x, xchar y) {
+	int dx,dy,adx,ady,sdx,sdy,dmax,d;
 	if(Blind) return(0);
 	if(!isok(x,y)) return(0);
 	d = dist(x,y);
@@ -609,13 +606,13 @@ register int dx,dy,adx,ady,sdx,sdy,dmax,d;
 	}
 }
 
-rroom(x,y) register int x,y; {
+static int rroom(int x, int y) {
 	return(IS_ROOM(levl[u.ux+x][u.uy+y].typ));
 }
 
 #else
 
-cansee(x,y) xchar x,y; {
+int cansee(xchar x, xchar y) {
 	if(Blind || u.uswallow) return(0);
 	if(dist(x,y) < 3) return(1);
 	if(levl[x][y].lit && seelx <= x && x <= seehx && seely <= y &&
@@ -624,14 +621,13 @@ cansee(x,y) xchar x,y; {
 }
 #endif /* QUEST */
 
-sgn(a) register int a; {
+int sgn(int a) {
 	return((a > 0) ? 1 : (a == 0) ? 0 : -1);
 }
 
 #ifdef QUEST
-setsee()
-{
-	register x,y;
+void setsee(void) {
+	int x,y;
 
 	if(Blind) {
 		pru();
@@ -646,9 +642,8 @@ setsee()
 
 #else
 
-setsee()
-{
-	register x,y;
+void setsee(void) {
+	int x,y;
 
 	if(Blind) {
 		pru();
@@ -679,16 +674,13 @@ setsee()
 }
 #endif /* QUEST */
 
-nomul(nval)
-register nval;
-{
+void nomul(int nval) {
 	if(multi < 0) return;
 	multi = nval;
 	flags.mv = flags.run = 0;
 }
 
-abon()
-{
+int abon(void) {
 	if(u.ustr == 3) return(-3);
 	else if(u.ustr < 6) return(-2);
 	else if(u.ustr < 8) return(-1);
@@ -698,8 +690,7 @@ abon()
 	else return(3);
 }
 
-dbon()
-{
+int dbon(void) {
 	if(u.ustr < 6) return(-1);
 	else if(u.ustr < 16) return(0);
 	else if(u.ustr < 18) return(1);
@@ -710,9 +701,8 @@ dbon()
 	else return(6);
 }
 
-losestr(num)	/* may kill you; cause may be poison or monster like 'A' */
-register num;
-{
+void losestr(int num) {
+	/* may kill you; cause may be poison or monster like 'A' */
 	u.ustr -= num;
 	while(u.ustr < 3) {
 		u.ustr++;
@@ -722,10 +712,7 @@ register num;
 	flags.botl = 1;
 }
 
-losehp(n,knam)
-register n;
-register char *knam;
-{
+void losehp(int n, char *knam) {
 	u.uhp -= n;
 	if(u.uhp > u.uhpmax)
 		u.uhpmax = u.uhp;	/* perhaps n was negative */
@@ -736,20 +723,16 @@ register char *knam;
 	}
 }
 
-losehp_m(n,mtmp)
-register n;
-register struct monst *mtmp;
-{
+void losehp_m(int n, struct monst *mtmp) {
 	u.uhp -= n;
 	flags.botl = 1;
 	if(u.uhp < 1)
 		done_in_by(mtmp);
 }
 
-losexp()	/* hit by V or W */
-{
-	register num;
-	extern long newuexp();
+void losexp(void) {
+	/* hit by V or W */
+	int num;
 
 	if(u.ulevel > 1)
 		pline("Goodbye level %u.", u.ulevel--);
@@ -762,10 +745,10 @@ losexp()	/* hit by V or W */
 	flags.botl = 1;
 }
 
-inv_weight(){
-register struct obj *otmp = invent;
-register int wt = (u.ugold + 500)/1000;
-register int carrcap;
+int inv_weight(void) {
+	struct obj *otmp = invent;
+	int wt = (u.ugold + 500)/1000;
+	int carrcap;
 	if(Levitation)			/* pugh@cornell */
 		carrcap = MAX_CARR_CAP;
 	else {
@@ -781,9 +764,9 @@ register int carrcap;
 	return(wt - carrcap);
 }
 
-inv_cnt(){
-register struct obj *otmp = invent;
-register int ct = 0;
+static int inv_cnt(void) {
+	struct obj *otmp = invent;
+	int ct = 0;
 	while(otmp){
 		ct++;
 		otmp = otmp->nobj;
@@ -791,8 +774,6 @@ register int ct = 0;
 	return(ct);
 }
 
-long
-newuexp()
-{
+long newuexp(void) {
 	return(10*(1L << (u.ulevel-1)));
 }
