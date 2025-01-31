@@ -1,18 +1,31 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* makedefs.c - version 1.0.2 */
 
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
 /* construct definitions of object constants */
 #define	DEF_FILE	"def.objects.h"
 #define	LINSZ	1000
 #define	STRSZ	40
 
-int fd;
-char string[STRSZ];
+static void readline(void);
+static int skipuntil(char *s);
+static int getentry(void);
+static void capitalize(char *sp);
+static int letter(char ch);
+static int digit(char ch);
 
-main(){
-register int index = 0;
-register int propct = 0;
-register char *sp;
+static int fd;
+static char string[STRSZ];
+
+int main(int argc, char **argv) {
+	int index = 0;
+	int propct = 0;
+	char *sp;
 	fd = open(DEF_FILE, 0);
 	if(fd < 0) {
 		perror(DEF_FILE);
@@ -29,29 +42,29 @@ register char *sp;
 				*sp = '_';
 		if(!strncmp(string, "RIN_", 4)){
 			capitalize(string+4);
-			printf("#define	%s	u.uprops[%d].p_flgs\n",
-				string+4, propct++);
+			printf("#define\t%s\tu.uprops[%d].p_flgs\n",
+			       string+4, propct++);
 		}
 		for(sp = string; *sp; sp++) capitalize(sp);
 		/* avoid trouble with stupid C preprocessors */
 		if(!strncmp(string, "WORTHLESS_PIECE_OF_", 19))
-			printf("/* #define %s	%d */\n", string, index);
+			printf("/* #define %s\t%d */\n", string, index);
 		else
-			printf("#define	%s	%d\n", string, index);
+			printf("#define\t%s\t%d\n", string, index);
 		index++;
 	}
-	printf("\n#define	CORPSE	DEAD_HUMAN\n");
-	printf("#define	LAST_GEM	(JADE+1)\n");
-	printf("#define	LAST_RING	%d\n", propct);
-	printf("#define	NROFOBJECTS	%d\n", index-1);
+	printf("\n#define\tCORPSE\tDEAD_HUMAN\n");
+	printf("#define\tLAST_GEM\t(JADE+1)\n");
+	printf("#define\tLAST_RING\t%d\n", propct);
+	printf("#define\tNROFOBJECTS\t%d\n", index-1);
 	exit(0);
 }
 
-char line[LINSZ], *lp = line, *lp0 = line, *lpe = line;
-int eof;
+static char line[LINSZ], *lp = line, *lp0 = line, *lpe = line;
+static int eof;
 
-readline(){
-register int n = read(fd, lp0, (line+LINSZ)-lp0);
+static void readline(void) {
+	int n = read(fd, lp0, (line+LINSZ)-lp0);
 	if(n < 0){
 		printf("Input error.\n");
 		exit(1);
@@ -60,17 +73,16 @@ register int n = read(fd, lp0, (line+LINSZ)-lp0);
 	lpe = lp0+n;
 }
 
-char
-nextchar(){
+static char nextchar(void) {
 	if(lp == lpe){
 		readline();
 		lp = lp0;
 	}
- return((lp == lpe) ? 0 : *lp++);
+	return((lp == lpe) ? 0 : *lp++);
 }
 
-skipuntil(s) char *s; {
-register char *sp0, *sp1;
+static int skipuntil(char *s) {
+	char *sp0, *sp1;
 loop:
 	while(*s != nextchar())
 		if(eof) {
@@ -78,7 +90,7 @@ loop:
 			exit(1);
 		}
 	if(strlen(s) > lpe-lp+1){
-		register char *lp1, *lp2;
+		char *lp1, *lp2;
 		lp2 = lp;
 		lp1 = lp = lp0;
 		while(lp2 != lpe) *lp1++ = *lp2++;
@@ -98,23 +110,24 @@ loop:
 		lp = sp1;
 		return(1);
 	}
- goto loop;
+	goto loop;
 }
 
-getentry(){
-int inbraces = 0, inparens = 0, stringseen = 0, commaseen = 0;
-int prefix = 0;
-char ch;
 #define	NSZ	10
-char identif[NSZ], *ip;
+
+static int getentry(void) {
+	int inbraces = 0, inparens = 0, stringseen = 0, commaseen = 0;
+	int prefix = 0;
+	char ch;
+	char identif[NSZ], *ip;
 	string[0] = string[4] = 0;
 	/* read until {...} or XXX(...) followed by ,
 	   skip comment and #define lines
 	   deliver 0 on failure
-	 */
+	   */
 	while(1) {
 		ch = nextchar();
-	swi:
+swi:
 		if(letter(ch)){
 			ip = identif;
 			do {
@@ -128,9 +141,9 @@ char identif[NSZ], *ip;
 				   !strcmp(identif, "RING") ||
 				   !strcmp(identif, "POTION") ||
 				   !strcmp(identif, "SCROLL"))
-				(void) strncpy(string, identif, 3),
-				string[3] = '_',
-				prefix = 4;
+					(void) strncpy(string, identif, 3),
+					string[3] = '_',
+					prefix = 4;
 		}
 		switch(ch) {
 		case '/':
@@ -158,13 +171,13 @@ char identif[NSZ], *ip;
 		case '\n':
 			/* watch for #define at begin of line */
 			if((ch = nextchar()) == '#'){
-				register char pch;
+				char pch;
 				/* skip until '\n' not preceded by '\\' */
 				do {
 					pch = ch;
 					ch = nextchar();
 				} while(ch != '\n' || pch == '\\');
- continue;
+				continue;
 			}
 			goto swi;
 		case ',':
@@ -186,10 +199,10 @@ char identif[NSZ], *ip;
 			continue;
 		case '"':
 			{
-				register char *sp = string + prefix;
-				register char pch;
-				register int store = (inbraces || inparens)
-					&& !stringseen++ && !commaseen;
+				char *sp = string + prefix;
+				char pch;
+				int store = (inbraces || inparens)
+				&& !stringseen++ && !commaseen;
 				do {
 					pch = ch;
 					ch = nextchar();
@@ -203,15 +216,15 @@ char identif[NSZ], *ip;
 	}
 }
 
-capitalize(sp) register char *sp; {
+static void capitalize(char *sp) {
 	if('a' <= *sp && *sp <= 'z') *sp += 'A'-'a';
 }
 
-letter(ch) register char ch; {
+static int letter(char ch) {
 	return( ('a' <= ch && ch <= 'z') ||
 		('A' <= ch && ch <= 'Z') );
 }
 
-digit(ch) register char ch; {
+static int digit(char ch) {
 	return( '0' <= ch && ch <= '9' );
 }
