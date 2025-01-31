@@ -1,20 +1,19 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.bones.c - version 1.0.3 */
 
-#include "hack.h"
-extern char plname[PL_NSIZ];
-extern long somegold();
-extern struct monst *makemon();
-extern struct permonst pm_ghost;
+#include <fcntl.h>
+#include <unistd.h>
 
-char bones[] = "bones_xx";
+#include "hack.h"
+
+static char bones[] = "bones_xx";
 
 /* save bones and possessions of a deceased adventurer */
-savebones(){
-register fd;
-register struct obj *otmp;
-register struct trap *ttmp;
-register struct monst *mtmp;
+void savebones(void) {
+	int fd;
+	struct obj *otmp;
+	struct trap *ttmp;
+	struct monst *mtmp;
 	if(dlevel <= 0 || dlevel > MAXLEVEL) return;
 	if(!rn2(1 + dlevel/2)) return;	/* not so many ghosts on low levels */
 	bones[6] = '0' + (dlevel/10);
@@ -72,8 +71,8 @@ register struct monst *mtmp;
 	(void) close(fd);
 }
 
-getbones(){
-register fd,x,y,ok;
+int getbones(void) {
+	int fd,x,y,ok;
 	if(rn2(3)) return(0);	/* only once in three times do we find bones */
 	bones[6] = '0' + dlevel/10;
 	bones[7] = '0' + dlevel%10;
