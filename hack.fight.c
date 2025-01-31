@@ -333,7 +333,7 @@ register struct monst *mtmp;
 			if(mtmp->wormno)
 				cutworm(mtmp, u.ux+u.dx, u.uy+u.dy,
 					uwep ? uwep->otyp : 0);
-#endif NOWORM
+#endif /* NOWORM */
 		}
 		if(mdat->mlet == 'a') {
 			if(rn2(2)) {

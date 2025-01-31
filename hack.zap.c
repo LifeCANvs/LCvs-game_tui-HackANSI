@@ -62,7 +62,7 @@ register struct obj *otmp;
 	case WAN_PROBING:
 		mstatusline(mtmp);
 		break;
-#endif WAN_PROBING
+#endif /* WAN_PROBING */
 	default:
 		impossible("What an interesting wand (%u)", otmp->otyp);
 	}
@@ -109,7 +109,7 @@ register struct obj *obj, *otmp;	/* returns TRUE if sth was done */
 	case WAN_SPEED_MONSTER:
 #ifdef WAN_PROBING
 	case WAN_PROBING:
-#endif WAN_PROBING
+#endif /* WAN_PROBING */
 		res = FALSE;
 		break;
 	default:

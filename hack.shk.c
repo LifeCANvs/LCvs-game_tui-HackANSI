@@ -22,7 +22,7 @@ shk_move(){ return(0); }
 replshk(mtmp,mtmp2) struct monst *mtmp, *mtmp2; {}
 char *shkname(){ return(""); }
 
-#else QUEST
+#else /* QUEST */
 #include	"hack.mfndpos.h"
 #include	"def.mkroom.h"
 #include	"def.eshk.h"
@@ -703,7 +703,7 @@ register int tmp, ac;
 #ifdef MAIL
 		if(obj->otyp == SCR_MAIL)
 			tmp = rnd(5);
-#endif MAIL
+#endif /* MAIL */
 		break;
 	case POTION_SYM:
 		tmp = 10*rnd(50);
@@ -892,7 +892,7 @@ register struct monst *shkp;
 #ifdef STUPID
 		    /* cater for stupid compilers */
 		    register int zz;
-#endif STUPID
+#endif /* STUPID */
 		    if(uondoor && (ib = sobj_at(ICE_BOX, nx, ny))) {
 			nix = nx; niy = ny; chi = i; break;
 		    }
@@ -903,7 +903,7 @@ register struct monst *shkp;
 			(appr && (zz = GDIST(nix,niy)) && zz > GDIST(nx,ny))
 #else
 			(appr && GDIST(nx,ny) < GDIST(nix,niy))
-#endif STUPID
+#endif /* STUPID */
 			) {
 			    nix = nx;
 			    niy = ny;
@@ -932,7 +932,7 @@ register struct monst *shkp;
 	}
  return(0);
 }
-#endif QUEST
+#endif /* QUEST */
 
 online(x,y) {
 	return(x==u.ux || y==u.uy ||

@@ -12,7 +12,7 @@ char *xprname();
 #ifndef NOWORM
 #include	"def.wseg.h"
 extern struct wseg *wsegs[32];
-#endif NOWORM
+#endif /* NOWORM */
 
 #define	NOINVSYM	'#'
 
@@ -174,7 +174,7 @@ register x,y;
 	register struct monst *mtmp;
 #ifndef NOWORM
 	register struct wseg *wtmp;
-#endif NOWORM
+#endif /* NOWORM */
 
 	m_atseg = 0;
 	for(mtmp = fmon; mtmp; mtmp = mtmp->nmon){
@@ -188,7 +188,7 @@ register x,y;
 			return(mtmp);
 		    }
 		}
-#endif NOWORM
+#endif /* NOWORM */
 	}
 	return(0);
 }

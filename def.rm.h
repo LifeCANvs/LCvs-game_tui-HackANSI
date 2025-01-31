@@ -32,7 +32,7 @@
 #define	CORR_SYM	':'
 #else
 #define	CORR_SYM	'#'
-#endif QUEST
+#endif /* QUEST */
 #define	POOL_SYM	'}'
 
 #define	ERRCHAR	'{'

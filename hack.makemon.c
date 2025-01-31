@@ -88,7 +88,7 @@ gotmon:
 #ifndef NOWORM
 	if(ptr->mlet == 'w' && getwn(mtmp))
 		initworm(mtmp);
-#endif NOWORM
+#endif /* NOWORM */
 
 	if(anything) if(ptr->mlet == 'O' || ptr->mlet == 'k') {
 		coord enexto();
@@ -164,7 +164,7 @@ struct monst *mtmp;
 
 #ifndef NOWORM
 	if(ch == 'w' && mtmp->mx) return;	/* do not relocate worms */
-#endif NOWORM
+#endif /* NOWORM */
 	do {
 		tx = rn1(COLNO-3,2);
 		ty = rn2(ROWNO);

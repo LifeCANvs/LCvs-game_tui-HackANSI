@@ -14,7 +14,7 @@
 #define	V7
 #else
 #define USG
-#endif BSD
+#endif /* BSD */
 
 /*
  * Some systems may have getchar() return EOF for various reasons, and
@@ -22,7 +22,7 @@
  */
 #ifndef BSD
 #define	NR_OF_EOFS	20
-#endif BSD
+#endif /* BSD */
 
 
 #ifdef USG
@@ -57,7 +57,7 @@
 #define GTTY(x)		(gtty(0, x))
 #define STTY(x)		(stty(0, x))
 
-#endif USG
+#endif /* USG */
 
 extern short ospeed;
 static char erase_char, kill_char;
@@ -124,7 +124,7 @@ register int change = 0;
 		/* be satisfied with one character; no timeout */
 		curttyb.c_cc[VMIN] = 1;		/* was VEOF */
 		curttyb.c_cc[VTIME] = 0;	/* was VEOL */
-#endif USG
+#endif /* USG */
 		change++;
 	}
 	if(change){
@@ -254,7 +254,7 @@ parse()
 		inline[1] = getchar();
 #ifdef QUEST
 		if(inline[1] == foo) inline[2] = getchar(); else
-#endif QUEST
+#endif /* QUEST */
 		inline[2] = 0;
 	}
 	if(foo == 'm' || foo == 'M'){
@@ -287,7 +287,7 @@ readchar() {
 	}
 #else
 		end_of_input();
-#endif NR_OF_EOFS
+#endif /* NR_OF_EOFS */
 	if(flags.toplin == 1)
 		flags.toplin = 2;
 	return((char) sym);

@@ -63,8 +63,8 @@
 
 #ifdef BSD
 #define	SUSPEND		/* let ^Z suspend the game */
-#endif BSD
-#endif UNIX
+#endif /* BSD */
+#endif /* UNIX */
 
 #ifdef CHDIR
 /*
@@ -87,7 +87,7 @@
  * simultaneously, define HACKDIR, SECURE and MAX_NR_OF_PLAYERS.
  * #define MAX_NR_OF_PLAYERS	6
  */
-#endif CHDIR
+#endif /* CHDIR */
 
 /* size of terminal screen is (at least) (ROWNO+2) by COLNO */
 #define	COLNO	80
@@ -131,4 +131,4 @@ typedef	xchar	boolean;		/* 0 or 1 */
 
 #define	SIZE(x)	(int)(sizeof(x) / sizeof(x[0]))
 
-#endif CONFIG
+#endif /* CONFIG */

@@ -86,7 +86,7 @@ register fd,x,y,ok;
 	(void) close(fd);
 #ifdef WIZARD
 	if(!wizard)	/* duvel!frans: don't remove bones while debugging */
-#endif WiZARD
+#endif /* WiZARD */
 	    if(unlink(bones) < 0){
 		pline("Cannot unlink %s .", bones);
 		return(0);

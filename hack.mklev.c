@@ -123,7 +123,7 @@ makelevel()
 
 #ifdef WIZARD
 	if(wizard && getenv("SHOPTYPE")) mkshop(); else
-#endif WIZARD
+#endif /* WIZARD */
  	if(dlevel > 1 && dlevel < 20 && rn2(dlevel) < 3) mkshop();
 	else
 	if(dlevel > 6 && !rn2(7)) mkzoo(ZOO);
@@ -260,7 +260,7 @@ boolean discarded;		/* piece of a discarded area */
 	if(rsmax >= MAXRS) {
 #ifdef WIZARD
 		if(wizard) pline("MAXRS may be too small.");
-#endif WIZARD
+#endif /* WIZARD */
 		return;
 	}
 	rsmax++;
@@ -382,7 +382,7 @@ chk:
 #ifdef WIZARD
 			    if(wizard && !secret)
 				pline("Strange area [%d,%d] in maker().",x,y);
-#endif WIZARD
+#endif /* WIZARD */
 				if(!rn2(3)) return(0);
 				if(x < lowx)
 					lowx = x+xlim+1;

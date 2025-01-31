@@ -30,7 +30,7 @@ doread() {
 	case SCR_MAIL:
 		readmail(/* scroll */);
 		break;
-#endif MAIL
+#endif /* MAIL */
 	case SCR_ENCHANT_ARMOR:
 	    {	extern struct obj *some_armor();
 		register struct obj *otmp = some_armor();
@@ -222,11 +222,11 @@ doread() {
 			register int oux = u.ux, ouy = u.uy;
 			tele();
 			if(dist(oux, ouy) > 100) known = TRUE;
-#else QUEST
+#else /* QUEST */
 			register int uroom = inroom(u.ux, u.uy);
 			tele();
 			if(uroom != inroom(u.ux, u.uy)) known = TRUE;
-#endif QUEST
+#endif /* QUEST */
 		}
 		break;
 	case SCR_GOLD_DETECTION:
@@ -348,7 +348,7 @@ doread() {
 				} else if(lev->seen) continue;
 #ifndef QUEST
 				if(num != ROOM)
-#endif QUEST
+#endif /* QUEST */
 				{
 				  lev->seen = lev->new = 1;
 				  if(lev->scrsym == ' ' || !lev->scrsym)
@@ -470,7 +470,7 @@ register boolean on;
 #ifdef QUEST
 		pline("The cave lights up around you, then fades.");
 		return;
-#else QUEST
+#else /* QUEST */
 		if(levl[u.ux][u.uy].typ == CORR) {
 		    pline("The corridor lights up around you, then fades.");
 		    return;
@@ -479,13 +479,13 @@ register boolean on;
 		    return;
 		} else
 		    pline("The room is lit.");
-#endif QUEST
+#endif /* QUEST */
 	}
 
 do_it:
 #ifdef QUEST
 	return;
-#else QUEST
+#else /* QUEST */
 	if(levl[u.ux][u.uy].lit == on)
 		return;
 	if(levl[u.ux][u.uy].typ == DOOR) {

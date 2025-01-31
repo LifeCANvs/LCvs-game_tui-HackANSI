@@ -225,7 +225,7 @@ gotit:
 				setsee();
 				pline("Your vision improves.");
 			} else
-#endif QUEST
+#endif /* QUEST */
 			if(otmp->otyp == FORTUNE_COOKIE) {
 			  if(Blind) {
 			    pline("This cookie has a scrap of paper inside!");
@@ -414,7 +414,7 @@ register tp = 0;
 	case 'y':
 #ifdef QUEST
 		u.uhorizon++;
-#endif QUEST
+#endif /* QUEST */
 		/* fall into next case */
 	case 'B':
 		Confusion = 50;
