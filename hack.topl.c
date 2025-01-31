@@ -1,10 +1,11 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.topl.c - version 1.0.2 */
 
-#include "hack.h"
+#include <stdlib.h>
 #include <stdio.h>
-extern char *eos();
-extern int CO;
+#include <stdarg.h>
+
+#include "hack.h"
 
 char toplines[BUFSZ];
 xchar tlx, tly;			/* set by pline; used by addtopl */
@@ -15,7 +16,9 @@ struct topl {
 } *old_toplines, *last_redone_topl;
 #define	OTLMAX	20		/* max nr of old toplines remembered */
 
-doredotopl(){
+static void redotoplin(void);
+
+int doredotopl(void) {
 	if(last_redone_topl)
 		last_redone_topl = last_redone_topl->next_topl;
 	if(!last_redone_topl)
@@ -27,7 +30,7 @@ doredotopl(){
 	return(0);
 }
 
-redotoplin() {
+static void redotoplin(void) {
 	home();
 	if(index(toplines, '\n')) cl_end();
 	putstr(toplines);
@@ -39,9 +42,9 @@ redotoplin() {
 		more();
 }
 
-remember_topl() {
-register struct topl *tl;
-register int cnt = OTLMAX;
+void remember_topl(void) {
+	struct topl *tl;
+	int cnt = OTLMAX;
 	if(last_redone_topl &&
 	   !strcmp(toplines, last_redone_topl->topl_text)) return;
 	if(old_toplines &&
@@ -63,7 +66,7 @@ register int cnt = OTLMAX;
 	}
 }
 
-addtopl(s) char *s; {
+void addtopl(char *s) {
 	curs(tlx,tly);
 	if(tlx + strlen(s) > CO) putsym('\n');
 	putstr(s);
@@ -72,9 +75,8 @@ addtopl(s) char *s; {
 	flags.toplin = 1;
 }
 
-xmore(s)
-char *s;	/* allowed chars besides space/return */
-{
+static void xmore(char *s) {
+	/* allowed chars besides space/return */
 	if(flags.toplin) {
 		curs(tlx, tly);
 		if(tlx + 8 > CO) putsym('\n'), tly++;
@@ -95,17 +97,15 @@ char *s;	/* allowed chars besides space/return */
 	flags.toplin = 0;
 }
 
-more(){
+void more(void) {
 	xmore("");
 }
 
-cmore(s)
-register char *s;
-{
+void cmore(char *s) {
 	xmore(s);
 }
 
-clrlin(){
+void clrlin(void) {
 	if(flags.toplin) {
 		home();
 		cl_end();
@@ -115,17 +115,21 @@ clrlin(){
 	flags.toplin = 0;
 }
 
-/*VARARGS1*/
-pline(line,arg1,arg2,arg3,arg4,arg5,arg6)
-register char *line,*arg1,*arg2,*arg3,*arg4,*arg5,*arg6;
-{
+void pline(char *line, ...) {
+	va_list args;
+	va_start(args, line);
+	vpline(line, args);
+	va_end(args);
+}
+
+void vpline(char *line, va_list args) {
 	char pbuf[BUFSZ];
-	register char *bp = pbuf, *tl;
-	register int n,n0;
+	char *bp = pbuf, *tl;
+	int n,n0;
 
 	if(!line || !*line) return;
 	if(!index(line, '%')) (void) strcpy(pbuf,line); else
-	(void) sprintf(pbuf,line,arg1,arg2,arg3,arg4,arg5,arg6);
+	(void) vsprintf(pbuf,line,args);
 	if(flags.toplin == 1 && !strcmp(pbuf, toplines)) return;
 	nscr();		/* %% */
 
@@ -168,7 +172,7 @@ register char *line,*arg1,*arg2,*arg3,*arg4,*arg5,*arg6;
 	redotoplin();
 }
 
-putsym(c) char c; {
+void putsym(char c) {
 	switch(c) {
 	case '\b':
 		backsp();
@@ -187,6 +191,6 @@ putsym(c) char c; {
 	(void) putchar(c);
 }
 
-putstr(s) register char *s; {
+void putstr(char *s) {
 	while(*s) putsym(*s++);
 }

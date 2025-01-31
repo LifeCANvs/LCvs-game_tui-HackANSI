@@ -162,3 +162,16 @@ extern char lock[];
 #define	MAX_CARR_CAP	120	/* so that boulders can be heavier */
 #define	MAXLEVEL	40
 #define	FAR	(COLNO+2)	/* position outside screen */
+
+/* hack.topl.c */
+
+int doredotopl(void);
+void remember_topl(void);
+void addtopl(char *s);
+void more(void);
+void cmore(char *s);
+void clrlin(void);
+void pline(char *line, ...);
+void vpline(char *line, va_list args);
+void putsym(char c);
+void putstr(char *s);
