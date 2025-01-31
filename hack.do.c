@@ -3,24 +3,22 @@
 
 /* Contains code for 'd', 'D' (drop), '>', '<' (up, down) and 't' (throw) */
 
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "hack.h"
 
-extern struct obj *splitobj(), *addinv();
-extern boolean hmon();
-extern boolean level_exists[];
-extern struct monst youmonst;
-extern char *Doname();
-extern char *nomovemsg;
+static int drop(struct obj *obj);
 
-dodrop() {
+int dodrop(void) {
 	return(drop(getobj("0$#", "drop")));
 }
 
-static
-drop(obj) register struct obj *obj; {
+static int drop(struct obj *obj) {
 	if(!obj) return(0);
 	if(obj->olet == '$') {		/* pseudo object */
-		register long amount = OGOLD(obj);
+		long amount = OGOLD(obj);
 
 		if(amount == 0)
 			pline("You didn't drop any gold pieces.");
@@ -50,16 +48,12 @@ drop(obj) register struct obj *obj; {
 }
 
 /* Called in several places - should not produce texts */
-dropx(obj)
-register struct obj *obj;
-{
+void dropx(struct obj *obj) {
 	freeinv(obj);
 	dropy(obj);
 }
 
-dropy(obj)
-register struct obj *obj;
-{
+void dropy(struct obj *obj) {
 	if(obj->otyp == CRYSKNIFE)
 		obj->otyp = WORM_TOOTH;
 	obj->ox = u.ux;
@@ -72,12 +66,11 @@ register struct obj *obj;
 }
 
 /* drop several things */
-doddrop() {
+int doddrop(void) {
 	return(ggetobj("drop", drop, 0));
 }
 
-dodown()
-{
+int dodown(void) {
 	if(u.ux != xdnstair || u.uy != ydnstair) {
 		pline("You can't go down here.");
 		return(0);
@@ -95,8 +88,7 @@ dodown()
 	return(1);
 }
 
-doup()
-{
+int doup(void) {
 	if(u.ux != xupstair || u.uy != yupstair) {
 		pline("You can't go up here.");
 		return(0);
@@ -114,12 +106,9 @@ doup()
 	return(1);
 }
 
-goto_level(newlevel, at_stairs)
-register int newlevel;
-register boolean at_stairs;
-{
-	register fd;
-	register boolean up = (newlevel < dlevel);
+void goto_level(int newlevel, boolean at_stairs) {
+	int fd;
+	boolean up = (newlevel < dlevel);
 
 	if(newlevel <= 0) done("escaped");    /* in fact < 0 is impossible */
 	if(newlevel > MAXLEVEL) newlevel = MAXLEVEL;	/* strange ... */
@@ -162,8 +151,6 @@ register boolean at_stairs;
 	if(!level_exists[dlevel])
 		mklev();
 	else {
-		extern int hackpid;
-
 		if((fd = open(lock,0)) < 0) {
 			pline("Cannot open %s .", lock);
 			pline("Probably someone removed it.");
@@ -201,7 +188,7 @@ register boolean at_stairs;
 			selftouch("Falling, you");
 		}
 	    }
-	    { register struct monst *mtmp = m_at(u.ux, u.uy);
+	    { struct monst *mtmp = m_at(u.ux, u.uy);
 	      if(mtmp)
 		mnexto(mtmp);
 	    }
@@ -224,8 +211,8 @@ register boolean at_stairs;
 	initrack();
 
 	losedogs();
-	{ register struct monst *mtmp;
-	  if(mtmp = m_at(u.ux, u.uy)) mnexto(mtmp);	/* riv05!a3 */
+	{ struct monst *mtmp;
+	  if((mtmp = m_at(u.ux, u.uy))) mnexto(mtmp);	/* riv05!a3 */
 	}
 	flags.nscrinh = 0;
 	setsee();
@@ -235,22 +222,20 @@ register boolean at_stairs;
 	read_engr_at(u.ux,u.uy);
 }
 
-donull() {
+int donull(void) {
 	return(1);	/* Do nothing, but let other things happen */
 }
 
-dopray() {
+int dopray(void) {
 	nomovemsg = "You finished your prayer.";
 	nomul(-3);
 	return(1);
 }
 
-struct monst *bhit(), *boomhit();
-dothrow()
-{
-	register struct obj *obj;
-	register struct monst *mon;
-	register tmp;
+int dothrow(void) {
+	struct obj *obj;
+	struct monst *mon;
+	int tmp;
 
 	obj = getobj("#)", "throw");   /* it is also possible to throw food */
 				       /* (or jewels, or iron balls ... ) */
@@ -412,7 +397,7 @@ dothrow()
 			if(u.utraptype == TT_PIT)
 				pline("The ball pulls you out of the pit!");
 			else {
-			    register long side =
+			    long side =
 				rn2(3) ? LEFT_SIDE : RIGHT_SIDE;
 			    pline("The ball pulls you out of the bear trap.");
 			    pline("Your %s leg is severely damaged.",
@@ -436,9 +421,8 @@ dothrow()
 
 /* split obj so that it gets size num */
 /* remainder is put in the object structure delivered by this call */
-struct obj *
-splitobj(obj, num) register struct obj *obj; register int num; {
-register struct obj *otmp;
+struct obj *splitobj(struct obj *obj, int num) {
+	struct obj *otmp;
 	otmp = newobj(0);
 	*otmp = *obj;		/* copies whole structure */
 	otmp->o_id = flags.ident++;
@@ -452,11 +436,7 @@ register struct obj *otmp;
 	return(otmp);
 }
 
-more_experienced(exp,rexp)
-register int exp, rexp;
-{
-	extern char pl_character[];
-
+void more_experienced(int exp, int rexp) {
 	u.uexp += exp;
 	u.urexp += 4*exp + rexp;
 	if(exp) flags.botl = 1;
@@ -464,18 +444,14 @@ register int exp, rexp;
 		flags.beginner = 0;
 }
 
-set_wounded_legs(side, timex)
-register long side;
-register int timex;
-{
+void set_wounded_legs(long side, int timex) {
 	if(!Wounded_legs || (Wounded_legs & TIMEOUT))
 		Wounded_legs |= side + timex;
 	else
 		Wounded_legs |= side;
 }
 
-heal_legs()
-{
+void heal_legs(void) {
 	if(Wounded_legs) {
 		if((Wounded_legs & BOTH_SIDES) == BOTH_SIDES)
 			pline("Your legs feel somewhat better.");
