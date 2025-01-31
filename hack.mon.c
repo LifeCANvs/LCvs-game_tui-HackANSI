@@ -3,7 +3,6 @@
 
 #include "hack.h"
 #include "hack.mfndpos.h"
-#define	NULL	(char *) 0
 extern struct monst *makemon();
 extern struct obj *mkobj_at();
 

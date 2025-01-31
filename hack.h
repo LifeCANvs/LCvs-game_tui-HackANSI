@@ -3,6 +3,9 @@
 
 #include "config.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+
 #ifdef BSD
 #include <strings.h>		/* declarations for strcat etc. */
 #else
@@ -25,7 +28,6 @@ typedef struct {
 #include	"def.obj.h"
 #include	"def.flag.h"
 
-extern char *sprintf();
 #define	plur(x)	(((x) == 1) ? "" : "s")
 
 #define	BUFSZ	256	/* for getlin buffers */
