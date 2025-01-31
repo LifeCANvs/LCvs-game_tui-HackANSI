@@ -163,6 +163,47 @@ extern char lock[];
 #define	MAXLEVEL	40
 #define	FAR	(COLNO+2)	/* position outside screen */
 
+/* hack.pri.c */
+
+void swallowed(void);
+void panic(char *str, ...);
+void atl(int x, int y, int ch);
+void on_scr(int x, int y);
+void tmp_at(schar x, schar y);
+void Tmp_at(schar x, schar y);
+void setclipped(void);
+void at(xchar x, xchar y, char ch);
+void prme(void);
+int doredraw(void);
+void docrt(void);
+void docorner(int xmin, int ymax);
+void curs_on_u(void);
+void pru(void);
+void prl(int x, int y);
+char news0(xchar x, xchar y);
+void newsym(int x, int y);
+void mnewsym(int x, int y);
+void nosee(int x, int y);
+#ifndef QUEST
+void prl1(int x, int y);
+void nose1(int x, int y);
+#endif
+int vism_at(int x, int y);
+#ifdef NEWSCR
+void pobj(struct obj *obj);
+#endif
+void unpobj(struct obj *obj);
+void seeobjs(void);
+void seemons(void);
+void pmon(struct monst *mon);
+void unpmon(struct monst *mon);
+void nscr(void);
+void bot(void);
+#ifdef WAN_PROBING
+void mstatusline(struct monst *mtmp);
+#endif
+void cls(void);
+
 /* hack.topl.c */
 
 int doredotopl(void);
