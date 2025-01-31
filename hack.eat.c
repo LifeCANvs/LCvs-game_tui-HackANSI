@@ -1,20 +1,18 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.eat.c - version 1.0.3 */
 
-#include	"hack.h"
-char POISONOUS[] = "ADKSVabhks";
-extern char *nomovemsg;
-extern int (*afternmv)();
-extern int (*occupation)();
-extern char *occtxt;
-extern struct obj *splitobj(), *addinv();
+#include <stdio.h>
+
+#include "hack.h"
+
+static char POISONOUS[] = "ADKSVabhks";
 
 /* hunger texts used on bottom line (each 8 chars long) */
-#define	SATIATED	0
+#define SATIATED	0
 #define NOT_HUNGRY	1
-#define	HUNGRY		2
-#define	WEAK		3
-#define	FAINTING	4
+#define HUNGRY		2
+#define WEAK		3
+#define FAINTING	4
 #define FAINTED		5
 #define STARVED		6
 
@@ -28,19 +26,19 @@ char *hu_stat[] = {
 	"Starved "
 };
 
-init_uhunger(){
+void init_uhunger(void) {
 	u.uhunger = 900;
 	u.uhs = NOT_HUNGRY;
 }
 
 #define	TTSZ	SIZE(tintxts)
-struct { char *txt; int nut; } tintxts[] = {
-	"It contains first quality peaches - what a surprise!",	40,
-	"It contains salmon - not bad!",	60,
-	"It contains apple juice - perhaps not what you hoped for.", 20,
-	"It contains some nondescript substance, tasting awfully.", 500,
-	"It contains rotten meat. You vomit.", -50,
-	"It turns out to be empty.",	0
+static struct { char *txt; int nut; } tintxts[] = {
+	{ "It contains first quality peaches - what a surprise!",	40} ,
+	{ "It contains salmon - not bad!",	60} ,
+	{ "It contains apple juice - perhaps not what you hoped for.", 20} ,
+	{ "It contains some nondescript substance, tasting awfully.", 500} ,
+	{ "It contains rotten meat. You vomit.", -50} ,
+	{ "It turns out to be empty.",	0 }
 };
 
 static struct {
@@ -48,8 +46,11 @@ static struct {
 	int usedtime, reqtime;
 } tin;
 
-opentin(){
-	register int r;
+static void newuhs(boolean incr);
+static int eatcorpse(struct obj *otmp);
+
+static int opentin(void) {
+	int r;
 
 	if(!carried(tin.tin))		/* perhaps it was stolen? */
 		return(0);		/* %% probably we should use tinoid */
@@ -81,15 +82,16 @@ opentin(){
  return(0);
 }
 
-Meatdone(){
+static int Meatdone(void) {
 	u.usym = '@';
 	prme();
+	return 0;
 }
 
-doeat(){
-	register struct obj *otmp;
-	register struct objclass *ftmp;
-	register tmp;
+int doeat(void) {
+	struct obj *otmp;
+	struct objclass *ftmp;
+	int tmp;
 
 	/* Is there some food (probably a heavy corpse) here on the ground? */
 	if(!Levitation)
@@ -138,8 +140,7 @@ gotit:
 			if(Glib) {
 				pline("The tin slips out of your hands.");
 				if(otmp->quan > 1) {
-					register struct obj *obj;
-					extern struct obj *splitobj();
+					struct obj *obj;
 
 					obj = splitobj(otmp, 1);
 					if(otmp == uwep) setuwep(obj);
@@ -259,7 +260,7 @@ eatx:
 }
 
 /* called in hack.main.c */
-gethungry(){
+void gethungry(void) {
 	--u.uhunger;
 	if(moves % 2) {
 		if(Regeneration) u.uhunger--;
@@ -276,24 +277,25 @@ gethungry(){
 }
 
 /* called after vomiting and after performing feats of magic */
-morehungry(num) register num; {
+void morehungry(int num) {
 	u.uhunger -= num;
 	newuhs(TRUE);
 }
 
 /* called after eating something (and after drinking fruit juice) */
-lesshungry(num) register num; {
+void lesshungry(int num) {
 	u.uhunger += num;
 	newuhs(FALSE);
 }
 
-unfaint(){
+static int unfaint(void) {
 	u.uhs = FAINTING;
 	flags.botl = 1;
+	return 0;
 }
 
-newuhs(incr) boolean incr; {
-	register int newhs, h = u.uhunger;
+static void newuhs(boolean incr) {
+	int newhs, h = u.uhunger;
 
 	newhs = (h > 1000) ? SATIATED :
 		(h > 150) ? NOT_HUNGRY :
@@ -352,16 +354,14 @@ newuhs(incr) boolean incr; {
 #define	CORPSE_I_TO_C(otyp)	(char) ((otyp >= DEAD_ACID_BLOB)\
 		     ?  'a' + (otyp - DEAD_ACID_BLOB)\
 		     :	'@' + (otyp - DEAD_HUMAN))
-poisonous(otmp)
-register struct obj *otmp;
-{
+int poisonous(struct obj *otmp) {
 	return(index(POISONOUS, CORPSE_I_TO_C(otmp->otyp)) != 0);
 }
 
 /* returns 1 if some text was printed */
-eatcorpse(otmp) register struct obj *otmp; {
-register char let = CORPSE_I_TO_C(otmp->otyp);
-register tp = 0;
+static int eatcorpse(struct obj *otmp) {
+	char let = CORPSE_I_TO_C(otmp->otyp);
+	int tp = 0;
 	if(let != 'a' && moves > otmp->age + 50 + rn2(100)) {
 		tp++;
 		pline("Ulch -- that meat was tainted!");
@@ -393,11 +393,11 @@ register tp = 0;
 	case 'n':
 		u.uhp = u.uhpmax;
 		flags.botl = 1;
-		/* fall into next case */
+		/* fall through */
 	case '@':
 		pline("You cannibal! You will be sorry for this!");
 		/* not tp++; */
-		/* fall into next case */
+		/* fall through */
 	case 'd':
 		Aggravate_monster |= INTRINSIC;
 		break;
@@ -410,12 +410,12 @@ register tp = 0;
 			Invis |= INTRINSIC;
 			See_invisible |= INTRINSIC;
 		}
-		/* fall into next case */
+		/* fall through */
 	case 'y':
 #ifdef QUEST
 		u.uhorizon++;
 #endif /* QUEST */
-		/* fall into next case */
+		/* fall through */
 	case 'B':
 		Confusion = 50;
 		break;
@@ -437,7 +437,8 @@ register tp = 0;
 		pline("You turn to stone.");
 		killer = "dead cockatrice";
 		done("died");
-		/* NOTREACHED */
+		/* if WIZARD defined, this might cause some confusion: */
+		/* fall through */
 	case 'a':
 	  if(Stoned) {
 	      pline("What a pity - you just destroyed a future piece of art!");
