@@ -1,10 +1,12 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.timeout.c - version 1.0.3 */
 
-#include	"hack.h"
+#include "hack.h"
 
-timeout(){
-register struct prop *upp;
+static void stoned_dialogue(void);
+
+void timeout(void) {
+	struct prop *upp;
 	if(Stoned) stoned_dialogue();
 	for(upp = u.uprops; upp < u.uprops+SIZE(u.uprops); upp++)
 	    if((upp->p_flgs & TIMEOUT) && !--upp->p_flgs) {
@@ -41,7 +43,7 @@ register struct prop *upp;
 }
 
 /* He is being petrified - dialogue by inmet!tower */
-char *stoned_texts[] = {
+static char *stoned_texts[] = {
 	"You are slowing down.",		/* 5 */
 	"Your limbs are stiffening.",		/* 4 */
 	"Your limbs have turned to stone.",	/* 3 */
@@ -49,9 +51,8 @@ char *stoned_texts[] = {
 	"You are a statue."			/* 1 */
 };
 
-stoned_dialogue()
-{
-	register long i = (Stoned & TIMEOUT);
+static void stoned_dialogue(void) {
+	long i = (Stoned & TIMEOUT);
 
 	if(i > 0 && i <= SIZE(stoned_texts))
 		pline(stoned_texts[SIZE(stoned_texts) - i]);
