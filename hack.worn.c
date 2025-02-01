@@ -3,7 +3,7 @@
 
 #include "hack.h"
 
-struct worn {
+static struct worn {
 	long w_mask;
 	struct obj **w_obj;
 } worn[] = {
@@ -20,12 +20,9 @@ struct worn {
 	{ 0, 0 }
 };
 
-setworn(obj, mask)
-register struct obj *obj;
-long mask;
-{
-	register struct worn *wp;
-	register struct obj *oobj;
+void setworn(struct obj *obj, long mask) {
+	struct worn *wp;
+	struct obj *oobj;
 
 	for(wp = worn; wp->w_mask; wp++) if(wp->w_mask & mask) {
 		oobj = *(wp->w_obj);
@@ -49,8 +46,8 @@ long mask;
 }
 
 /* called e.g. when obj is destroyed */
-setnotworn(obj) register struct obj *obj; {
-	register struct worn *wp;
+void setnotworn(struct obj *obj) {
+	struct worn *wp;
 
 	for(wp = worn; wp->w_mask; wp++)
 		if(obj == *(wp->w_obj)) {
