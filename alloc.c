@@ -1,4 +1,9 @@
 /* alloc.c - version 1.0.2 */
+
+#include <stdlib.h>
+
+#include "hack.h"
+
 #ifdef LINT
 
 /*
@@ -9,8 +14,7 @@
    from lint
 */
 #include <stdio.h>
-long *
-alloc(n) unsigned n; {
+long *alloc(unsigned n) {
 long dummy = ftell(stderr);
 	if(n) dummy = 0;	/* make sure arg is used */
 	return(&dummy);
@@ -18,26 +22,16 @@ long dummy = ftell(stderr);
 
 #else
 
-extern char *malloc();
-extern char *realloc();
-
-long *
-alloc(lth)
-register unsigned lth;
-{
-	register char *ptr;
+long *alloc(unsigned lth) {
+	char *ptr;
 
 	if(!(ptr = malloc(lth)))
 		panic("Cannot get %d bytes", lth);
 	return((long *) ptr);
 }
 
-long *
-enlarge(ptr,lth)
-register char *ptr;
-register unsigned lth;
-{
-	register char *nptr;
+long *enlarge(char *ptr, unsigned lth) {
+	char *nptr;
 
 	if(!(nptr = realloc(ptr,lth)))
 		panic("Cannot reallocate %d bytes", lth);
