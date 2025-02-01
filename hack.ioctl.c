@@ -14,7 +14,7 @@
 struct ltchars ltchars, ltchars0;
 #else
 #include	<termio.h>	/* also includes part of <sgtty.h> */
-struct termio termio;
+struct termios termio;
 #endif /* BSD */
 
 void getioctls(void) {
@@ -22,7 +22,7 @@ void getioctls(void) {
 	(void) ioctl(fileno(stdin), (int) TIOCGLTC, (char *) &ltchars);
 	(void) ioctl(fileno(stdin), (int) TIOCSLTC, (char *) &ltchars0);
 #else
-	(void) ioctl(fileno(stdin), (int) TCGETA, &termio);
+	(void) ioctl(fileno(stdin), (int) TCGETS, &termio);
 #endif /* BSD */
 }
 
@@ -30,7 +30,7 @@ void setioctls(void) {
 #ifdef BSD
 	(void) ioctl(fileno(stdin), (int) TIOCSLTC, (char *) &ltchars);
 #else
-	(void) ioctl(fileno(stdin), (int) TCSETA, &termio);
+	(void) ioctl(fileno(stdin), (int) TCSETS, &termio);
 #endif /* BSD */
 }
 
