@@ -1,33 +1,21 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.lev.c - version 1.0.3 */
 
-#include "hack.h"
-#include "def.mkroom.h"
+#include <stdlib.h>
 #include <stdio.h>
-extern struct monst *restmonchn();
-extern struct obj *restobjchn();
-extern struct obj *billobjs;
-extern char *itoa();
-extern char SAVEF[];
-extern int hackpid;
-extern xchar dlevel;
-extern char nul[];
+#include <unistd.h>
 
-#ifndef NOWORM
-#include	"def.wseg.h"
-extern struct wseg *wsegs[32], *wheads[32];
-extern long wgrowtime[32];
-#endif /* NOWORM */
+#include "hack.h"
+
+static void savegoldchn(int fd, struct gold *gold);
+static void savetrapchn(int fd, struct trap *trap);
 
 boolean level_exists[MAXLEVEL+1];
 
-savelev(fd,lev)
-int fd;
-xchar lev;
-{
+void savelev(int fd, xchar lev) {
 #ifndef NOWORM
-	register struct wseg *wtmp, *wtmp2;
-	register tmp;
+	struct wseg *wtmp, *wtmp2;
+	int tmp;
 #endif /* NOWORM */
 
 	if(fd < 0) panic("Save on bad file!");	/* impossible */
@@ -70,21 +58,14 @@ xchar lev;
 #endif /* NOWORM */
 }
 
-bwrite(fd,loc,num)
-register fd;
-register char *loc;
-register unsigned num;
-{
-/* lint wants the 3rd arg of write to be an int; lint -p an unsigned */
+void bwrite(int fd, char *loc, unsigned num) {
+	/* lint wants the 3rd arg of write to be an int; lint -p an unsigned */
 	if(write(fd, loc, (int) num) != num)
 		panic("cannot write %u bytes to file #%d", num, fd);
 }
 
-saveobjchn(fd,otmp)
-register fd;
-register struct obj *otmp;
-{
-	register struct obj *otmp2;
+void saveobjchn(int fd, struct obj *otmp) {
+	struct obj *otmp2;
 	unsigned xl;
 	int minusone = -1;
 
@@ -99,11 +80,8 @@ register struct obj *otmp;
  bwrite(fd, (char *) &minusone, sizeof(int));
 }
 
-savemonchn(fd,mtmp)
-register fd;
-register struct monst *mtmp;
-{
-	register struct monst *mtmp2;
+void savemonchn(int fd, struct monst *mtmp) {
+	struct monst *mtmp2;
 	unsigned xl;
 	int minusone = -1;
 	struct permonst *monbegin = &mons[0];
@@ -122,11 +100,8 @@ register struct monst *mtmp;
  bwrite(fd, (char *) &minusone, sizeof(int));
 }
 
-savegoldchn(fd,gold)
-register fd;
-register struct gold *gold;
-{
-	register struct gold *gold2;
+static void savegoldchn(int fd, struct gold *gold) {
+	struct gold *gold2;
 	while(gold) {
 		gold2 = gold->ngold;
 		bwrite(fd, (char *) gold, sizeof(struct gold));
@@ -136,11 +111,8 @@ register struct gold *gold;
  bwrite(fd, nul, sizeof(struct gold));
 }
 
-savetrapchn(fd,trap)
-register fd;
-register struct trap *trap;
-{
-	register struct trap *trap2;
+static void savetrapchn(int fd, struct trap *trap) {
+	struct trap *trap2;
 	while(trap) {
 		trap2 = trap->ntrap;
 		bwrite(fd, (char *) trap, sizeof(struct trap));
@@ -150,16 +122,13 @@ register struct trap *trap;
  bwrite(fd, nul, sizeof(struct trap));
 }
 
-getlev(fd,pid,lev)
-int fd,pid;
-xchar lev;
-{
-	register struct gold *gold;
-	register struct trap *trap;
+void getlev(int fd, int pid, xchar lev) {
+	struct gold *gold;
+	struct trap *trap;
 #ifndef NOWORM
-	register struct wseg *wtmp;
+	struct wseg *wtmp;
 #endif /* NOWORM */
-	register tmp;
+	int tmp;
 	long omoves;
 	int hpid;
 	xchar dlvl;
@@ -187,8 +156,7 @@ xchar lev;
 
 	/* regenerate animals while on another level */
 	{ long tmoves = (moves > omoves) ? moves-omoves : 0;
-	  register struct monst *mtmp, *mtmp2;
-	  extern char genocided[];
+	  struct monst *mtmp, *mtmp2;
 
 	  for(mtmp = fmon; mtmp; mtmp = mtmp2) {
 		long newhp;		/* tmoves may be very large */
@@ -254,13 +222,8 @@ xchar lev;
 #endif /* NOWORM */
 }
 
-mread(fd, buf, len)
-register fd;
-register char *buf;
-register unsigned len;
-{
-	register int rlen;
-	extern boolean restoring;
+void mread(int fd, char *buf, unsigned len) {
+	int rlen;
 
 	rlen = read(fd, buf, (int) len);
 	if(rlen != len){
@@ -273,10 +236,7 @@ register unsigned len;
 	}
 }
 
-mklev()
-{
-	extern boolean in_mklev;
-
+void mklev(void) {
 	if(getbones()) return;
 
 	in_mklev = TRUE;
