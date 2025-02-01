@@ -1,11 +1,9 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.makemon.c - version 1.0.2 */
 
-#include	"hack.h"
-extern char fut_geno[];
-extern char *index();
-extern struct obj *mkobj_at();
-struct monst zeromonst;
+#include "hack.h"
+
+static struct monst zeromonst;
 
 /*
  * called with [x,y] = coordinates;
@@ -15,12 +13,9 @@ struct monst zeromonst;
  *	In case we make an Orc or killer bee, we make an entire horde (swarm);
  *	note that in this case we return only one of them (the one at [x,y]).
  */
-struct monst *
-makemon(ptr,x,y)
-register struct permonst *ptr;
-{
-	register struct monst *mtmp;
-	register tmp, ct;
+struct monst *makemon(struct permonst *ptr, int x, int y) {
+	struct monst *mtmp;
+	int tmp, ct;
 	boolean anything = (!ptr);
 
 	if(x != 0 || y != 0) if(m_at(x,y)) return((struct monst *) 0);
@@ -62,13 +57,14 @@ gotmon:
 		mtmp->mimic = 1;
 		mtmp->mappearance = ']';
 	}
-	{ extern boolean in_mklev;
-	if(!in_mklev) {
-		if(x == u.ux && y == u.uy && ptr->mlet != ' ')
-			mnexto(mtmp);
-		if(x == 0 && y == 0)
-			rloc(mtmp);
-	}}
+	{
+		if(!in_mklev) {
+			if(x == u.ux && y == u.uy && ptr->mlet != ' ')
+				mnexto(mtmp);
+			if(x == 0 && y == 0)
+				rloc(mtmp);
+		}
+	}
 	if(ptr->mlet == 's' || ptr->mlet == 'S') {
 		mtmp->mhide = mtmp->mundetected = 1;
 		if(in_mklev)
@@ -91,9 +87,8 @@ gotmon:
 #endif /* NOWORM */
 
 	if(anything) if(ptr->mlet == 'O' || ptr->mlet == 'k') {
-		coord enexto();
 		coord mm;
-		register int cnt = rnd(10);
+		int cnt = rnd(10);
 		mm.x = x;
 		mm.y = y;
 		while(cnt--) {
@@ -105,11 +100,8 @@ gotmon:
 	return(mtmp);
 }
 
-coord
-enexto(xx,yy)
-register xchar xx,yy;
-{
-	register xchar x,y;
+coord enexto(xchar xx, xchar yy) {
+	xchar x,y;
 	coord foo[15], *tfoo;
 	int range;
 
@@ -146,8 +138,8 @@ foofull:
 	return( foo[rn2(tfoo-foo)] );
 }
 
-goodpos(x,y)	/* used only in mnexto and rloc */
-{
+int goodpos(int x,int y) {
+	/* used only in mnexto and rloc */
 	return(
 	! (x < 1 || x > COLNO-2 || y < 1 || y > ROWNO-2 ||
 	   m_at(x,y) || !ACCESSIBLE(levl[x][y].typ)
@@ -156,11 +148,9 @@ goodpos(x,y)	/* used only in mnexto and rloc */
  ));
 }
 
-rloc(mtmp)
-struct monst *mtmp;
-{
-	register tx,ty;
-	register char ch = mtmp->data->mlet;
+void rloc(struct monst *mtmp) {
+	int tx,ty;
+	char ch = mtmp->data->mlet;
 
 #ifndef NOWORM
 	if(ch == 'w' && mtmp->mx) return;	/* do not relocate worms */
@@ -181,13 +171,9 @@ struct monst *mtmp;
  pmon(mtmp);
 }
 
-struct monst *
-mkmon_at(let,x,y)
-char let;
-register int x,y;
-{
-	register int ct;
-	register struct permonst *ptr;
+struct monst *mkmon_at(char let, int x, int y) {
+	int ct;
+	struct permonst *ptr;
 
 	for(ct = 0; ct < CMNUM; ct++) {
 		ptr = &mons[ct];
