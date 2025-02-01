@@ -5,16 +5,16 @@
 
 #define	UTSZ	50
 
-coord utrack[UTSZ];
-int utcnt = 0;
-int utpnt = 0;
+static coord utrack[UTSZ];
+static int utcnt = 0;
+static int utpnt = 0;
 
-initrack(){
+void initrack(void) {
 	utcnt = utpnt = 0;
 }
 
 /* add to track */
-settrack(){
+void settrack(void) {
 	if(utcnt < UTSZ) utcnt++;
 	if(utpnt == UTSZ) utpnt = 0;
 	utrack[utpnt].x = u.ux;
@@ -22,10 +22,9 @@ settrack(){
 	utpnt++;
 }
 
-coord *
-gettrack(x,y) register x,y; {
-register int i,cnt,dist;
-coord tc;
+coord *gettrack(int x, int y) {
+	int i,cnt,dist;
+	coord tc;
 	cnt = utcnt;
 	for(i = utpnt-1; cnt--; i--){
 		if(i == -1) i = UTSZ-1;
