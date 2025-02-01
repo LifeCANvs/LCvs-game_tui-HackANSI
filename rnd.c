@@ -1,29 +1,23 @@
 /* rnd.c - version 1.0.2 */
 
+#include <stdlib.h>
+
 #define RND(x)	((rand()>>3) % x)
 
-rn1(x,y)
-register x,y;
-{
+int rn1(int x, int y) {
 	return(RND(x)+y);
 }
 
-rn2(x)
-register x;
-{
+int rn2(int x) {
 	return(RND(x));
 }
 
-rnd(x)
-register x;
-{
+int rnd(int x) {
 	return(RND(x)+1);
 }
 
-d(n,x)
-register n,x;
-{
-	register tmp = n;
+int d(int n, int x) {
+	int tmp = n;
 
 	while(n--) tmp += RND(x);
 	return(tmp);
