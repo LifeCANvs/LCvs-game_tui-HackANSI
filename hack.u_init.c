@@ -171,7 +171,8 @@ beginner:
 		(void) fflush(stdout);
 	}
 	if(exper) {
-		roles[i][0] = pc;
+		/* SEGFAULT */
+		/*roles[i][0] = pc;*/
 	}
 
 got_suffix:
