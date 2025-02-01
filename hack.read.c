@@ -1,16 +1,16 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.read.c - version 1.0.3 */
 
+#include <stdlib.h>
+
 #include "hack.h"
 
-extern struct monst *makemon();
-extern struct obj *mkobj_at();
-int identify();
+static int monstersym(char ch);
 
-doread() {
-	register struct obj *scroll;
-	register boolean confused = (Confusion != 0);
-	register boolean known = FALSE;
+int doread(void) {
+	struct obj *scroll;
+	boolean confused = (Confusion != 0);
+	boolean known = FALSE;
 
 	scroll = getobj("?", "read");
 	if(!scroll) return(0);
@@ -32,8 +32,8 @@ doread() {
 		break;
 #endif /* MAIL */
 	case SCR_ENCHANT_ARMOR:
-	    {	extern struct obj *some_armor();
-		register struct obj *otmp = some_armor();
+	    {
+		struct obj *otmp = some_armor();
 		if(!otmp) {
 			strange_feeling(scroll,"Your skin glows then fades.");
 			return(1);
@@ -58,7 +58,7 @@ doread() {
 	    }
 	case SCR_DESTROY_ARMOR:
 		if(confused) {
-			register struct obj *otmp = some_armor();
+			struct obj *otmp = some_armor();
 			if(!otmp) {
 				strange_feeling(scroll,"Your bones itch.");
 				return(1);
@@ -93,8 +93,8 @@ doread() {
 		}
 		break;
 	case SCR_SCARE_MONSTER:
-	    {	register int ct = 0;
-		register struct monst *mtmp;
+	    {	int ct = 0;
+		struct monst *mtmp;
 
 		for(mtmp = fmon; mtmp; mtmp = mtmp->nmon)
 			if(cansee(mtmp->mx,mtmp->my)) {
@@ -120,7 +120,7 @@ doread() {
 		    pline("This scroll seems to be blank.");
 		break;
 	case SCR_REMOVE_CURSE:
-	    {	register struct obj *obj;
+	    {	struct obj *obj;
 		if(confused)
 		  pline("You feel like you need some help.");
 		else
@@ -140,7 +140,7 @@ doread() {
 		break;
 	    }
 	case SCR_CREATE_MONSTER:
-	    {	register int cnt = 1;
+	    {	int cnt = 1;
 
 		if(!rn2(73)) cnt += rnd(4);
 		if(confused) cnt += 12;
@@ -168,19 +168,19 @@ doread() {
 				return(1);
 		break;
 	case SCR_TAMING:
-	    {	register int i,j;
-		register int bd = confused ? 5 : 1;
-		register struct monst *mtmp;
+	    {	int i,j;
+		int bd = confused ? 5 : 1;
+		struct monst *mtmp;
 
 		for(i = -bd; i <= bd; i++) for(j = -bd; j <= bd; j++)
-		if(mtmp = m_at(u.ux+i, u.uy+j))
+		if((mtmp = m_at(u.ux+i, u.uy+j)))
 			(void) tamedog(mtmp, (struct obj *) 0);
 		break;
 	    }
 	case SCR_GENOCIDE:
-	    {	extern char genocided[], fut_geno[];
+	    {
 		char buf[BUFSZ];
-		register struct monst *mtmp, *mtmp2;
+		struct monst *mtmp, *mtmp2;
 
 		pline("You have found a scroll of genocide!");
 		known = TRUE;
@@ -219,11 +219,11 @@ doread() {
 			level_tele();
 		else {
 #ifdef QUEST
-			register int oux = u.ux, ouy = u.uy;
+			int oux = u.ux, ouy = u.uy;
 			tele();
 			if(dist(oux, ouy) > 100) known = TRUE;
 #else /* QUEST */
-			register int uroom = inroom(u.ux, u.uy);
+			int uroom = inroom(u.ux, u.uy);
 			tele();
 			if(uroom != inroom(u.ux, u.uy)) known = TRUE;
 #endif /* QUEST */
@@ -233,7 +233,7 @@ doread() {
 	    /* Unfortunately this code has become slightly less elegant,
 	       now that gold and traps no longer are of the same type. */
 	    if(confused) {
-		register struct trap *ttmp;
+		struct trap *ttmp;
 
 		if(!ftrap) {
 			strange_feeling(scroll, "Your toes stop itching.");
@@ -253,7 +253,7 @@ doread() {
 			pline("You feel very greedy!");
 		}
 	    } else {
-		register struct gold *gtmp;
+		struct gold *gtmp;
 
 		if(!fgold) {
 			strange_feeling(scroll, "You feel materially poor.");
@@ -279,9 +279,9 @@ doread() {
 		docrt();
 		break;
 	case SCR_FOOD_DETECTION:
-	    {	register ct = 0, ctu = 0;
-		register struct obj *obj;
-		register char foodsym = confused ? POTION_SYM : FOOD_SYM;
+	    {	int ct = 0, ctu = 0;
+		struct obj *obj;
+		char foodsym = confused ? POTION_SYM : FOOD_SYM;
 
 		for(obj = fobj; obj; obj = obj->nobj)
 			if(obj->olet == FOOD_SYM) {
@@ -325,8 +325,8 @@ doread() {
 		    );
 		return(1);
 	case SCR_MAGIC_MAPPING:
-	    {	register struct rm *lev;
-		register int num, zx, zy;
+	    {	struct rm *lev;
+		int num, zx, zy;
 
 		known = TRUE;
 		pline("On this scroll %s a map!",
@@ -360,7 +360,7 @@ doread() {
 		break;
 	    }
 	case SCR_AMNESIA:
-	    {	register int zx, zy;
+	    {	int zx, zy;
 
 		known = TRUE;
 		for(zx = 0; zx < COLNO; zx++) for(zy = 0; zy < ROWNO; zy++)
@@ -372,8 +372,8 @@ doread() {
 		break;
 	    }
 	case SCR_FIRE:
-	    {	register int num;
-		register struct monst *mtmp;
+	    {	int num;
+		struct monst *mtmp;
 
 		known = TRUE;
 		if(confused) {
@@ -435,19 +435,16 @@ doread() {
 	return(1);
 }
 
-identify(otmp)		/* also called by newmail() */
-register struct obj *otmp;
-{
+int identify(struct obj *otmp) {
+	/* also called by newmail() */
 	objects[otmp->otyp].oc_name_known = 1;
 	otmp->known = otmp->dknown = 1;
 	prinv(otmp);
 	return(1);
 }
 
-litroom(on)
-register boolean on;
-{
-	register num,zx,zy;
+void litroom(boolean on) {
+	int num,zx,zy;
 
 	/* first produce the text (provided he is not blind) */
 	if(Blind) goto do_it;
@@ -510,19 +507,18 @@ do_it:
 	for(zy = seely; zy <= seehy; zy++)
 		for(zx = seelx; zx <= seehx; zx++) {
 			levl[zx][zy].lit = on;
-			if(!Blind && dist(zx,zy) > 2)
+			if(!Blind && dist(zx,zy) > 2) {
 				if(on) prl(zx,zy); else nosee(zx,zy);
+			}
 		}
 	if(!on) seehx = 0;
-#endif	QUEST
+#endif /* QUEST */
 }
 
 /* Test whether we may genocide all monsters with symbol  ch  */
-monstersym(ch)				/* arnold@ucsfcgl */
-register char ch;
-{
-	register struct permonst *mp;
-	extern struct permonst pm_eel;
+static int monstersym(char ch) {
+	/* arnold@ucsfcgl */
+	struct permonst *mp;
 
 	/*
 	 * can't genocide certain monsters
