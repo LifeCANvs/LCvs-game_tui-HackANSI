@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include "hack.h"
 
-extern char plname[];
-
 static char *rip[] = {
 "                       ----------",
 "                      /          \\",
@@ -24,11 +22,13 @@ static char *rip[] = {
 0
 };
 
-outrip(){
-	register char **dp = rip;
-	register char *dpx;
+static void center(int line, char *text);
+
+void outrip(void) {
+	char **dp = rip;
+	char *dpx;
 	char buf[BUFSZ];
-	register x,y;
+	int x,y;
 
 	cls();
 	(void) strcpy(buf, plname);
@@ -43,7 +43,7 @@ outrip(){
 	center(8, buf);
 	(void) strcpy(buf, killer);
 	if(strlen(buf) > 16) {
-	    register int i,i0,i1;
+		int i,i0,i1;
 		i0 = i1 = 0;
 		for(i = 0; i <= 16; i++)
 			if(buf[i] == ' ') i0 = i, i1 = i+1;
@@ -62,7 +62,6 @@ outrip(){
 			while(dpx[x] == ' ') x++;
 			curs(x,y);
 			while(dpx[x] && dpx[x] != ' '){
-				extern int done_stopprint;
 				if(done_stopprint)
 					return;
 				curx++;
@@ -73,8 +72,8 @@ outrip(){
 	getret();
 }
 
-center(line, text) int line; char *text; {
-register char *ip,*op;
+static void center(int line, char *text) {
+	char *ip,*op;
 	ip = text;
 	op = &rip[line][28 - ((strlen(text)+1)/2)];
 	while(*ip) *op++ = *ip++;
