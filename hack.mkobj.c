@@ -3,14 +3,10 @@
 
 #include "hack.h"
 
-char mkobjstr[] = "))[[!!!!????%%%%/=**))[[!!!!????%%%%/=**(%";
-struct obj *mkobj(), *mksobj();
+static char mkobjstr[] = "))[[!!!!????%%%%/=**))[[!!!!????%%%%/=**(%";
 
-struct obj *
-mkobj_at(let,x,y)
-register let,x,y;
-{
-	register struct obj *otmp = mkobj(let);
+struct obj *mkobj_at(int let, int x, int y) {
+	struct obj *otmp = mkobj(let);
 	otmp->ox = x;
 	otmp->oy = y;
 	otmp->nobj = fobj;
@@ -18,18 +14,15 @@ register let,x,y;
 	return(otmp);
 }
 
-mksobj_at(otyp,x,y)
-register otyp,x,y;
-{
-	register struct obj *otmp = mksobj(otyp);
+void mksobj_at(int otyp, int x, int y) {
+	struct obj *otmp = mksobj(otyp);
 	otmp->ox = x;
 	otmp->oy = y;
 	otmp->nobj = fobj;
 	fobj = otmp;
 }
 
-struct obj *
-mkobj(let) {
+struct obj *mkobj(int let) {
 	if(!let)
 		let = mkobjstr[rn2(sizeof(mkobjstr) - 1)];
 	return(
@@ -40,15 +33,11 @@ mkobj(let) {
 	    )
 	);
 }
-	
 
 struct obj zeroobj;
 
-struct obj *
-mksobj(otyp)
-register otyp;
-{
-	register struct obj *otmp;
+struct obj *mksobj(int otyp) {
+	struct obj *otmp;
 	char let = objects[otyp].oc_olet;
 
 	otmp = newobj(0);
@@ -75,7 +64,7 @@ register otyp;
 		if(otmp->otyp == TIN)
 			otmp->spe = rnd(...);
 #endif /* NOT_YET_IMPLEMENTED */
-		/* fall into next case */
+		/* fall through */
 	case GEM_SYM:
 		otmp->quan = rn2(6) ? 1 : 2;
 	case TOOL_SYM:
@@ -117,24 +106,20 @@ register otyp;
 	return(otmp);
 }
 
-letter(c) {
+int letter(int c) {
 	return(('@' <= c && c <= 'Z') || ('a' <= c && c <= 'z'));
 }
 
-weight(obj)
-register struct obj *obj;
-{
-register int wt = objects[obj->otyp].oc_weight;
+int weight(struct obj *obj) {
+	int wt = objects[obj->otyp].oc_weight;
 	return(wt ? wt*obj->quan : (obj->quan + 1)/2);
 }
 
-mkgold(num,x,y)
-register long num;
-{
-	register struct gold *gold;
-	register long amount = (num ? num : 1 + (rnd(dlevel+2) * rnd(30)));
+void mkgold(long num, int x, int y) {
+	struct gold *gold;
+	long amount = (num ? num : 1 + (rnd(dlevel+2) * rnd(30)));
 
-	if(gold = g_at(x,y))
+	if((gold = g_at(x,y)))
 		gold->amount += amount;
 	else {
 		gold = newgold();
