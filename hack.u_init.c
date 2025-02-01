@@ -1,26 +1,27 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.u_init.c - version 1.0.3 */
 
-#include "hack.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+
+#include "hack.h"
+
 #define Strcpy	(void) strcpy
 #define	Strcat	(void) strcat
 #define	UNDEF_TYP	0
 #define	UNDEF_SPE	'\177'
-extern struct obj *addinv();
-extern char *eos();
-extern char plname[];
 
-struct you zerou;
+static struct you zerou;
 char pl_character[PL_CSIZ];
-char *(roles[]) = {	/* must all have distinct first letter */
-			/* roles[4] may be changed to -man */
+static char *roles[] = {
+	/* must all have distinct first letter */
+	/* roles[4] may be changed to -man */
 	"Tourist", "Speleologist", "Fighter", "Knight",
 	"Cave-man", "Wizard"
 };
 #define	NR_OF_ROLES	SIZE(roles)
-char rolesyms[NR_OF_ROLES + 1];		/* filled by u_init() */
+static char rolesyms[NR_OF_ROLES + 1];		/* filled by u_init() */
 
 struct trobj {
 	uchar trotyp;
@@ -31,13 +32,13 @@ struct trobj {
 };
 
 #ifdef WIZARD
-struct trobj Extra_objs[] = {
+static struct trobj Extra_objs[] = {
 	{ 0, 0, 0, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
 };
 #endif /* WIZARD */
 
-struct trobj Cave_man[] = {
+static struct trobj Cave_man[] = {
 	{ MACE, 1, WEAPON_SYM, 1, 1 },
 	{ BOW, 1, WEAPON_SYM, 1, 1 },
 	{ ARROW, 0, WEAPON_SYM, 25, 1 },	/* quan is variable */
@@ -45,13 +46,13 @@ struct trobj Cave_man[] = {
 	{ 0, 0, 0, 0, 0}
 };
 
-struct trobj Fighter[] = {
+static struct trobj Fighter[] = {
 	{ TWO_HANDED_SWORD, 0, WEAPON_SYM, 1, 1 },
 	{ RING_MAIL, 0, ARMOR_SYM, 1, 1 },
 	{ 0, 0, 0, 0, 0 }
 };
 
-struct trobj Knight[] = {
+static struct trobj Knight[] = {
 	{ LONG_SWORD, 0, WEAPON_SYM, 1, 1 },
 	{ SPEAR, 2, WEAPON_SYM, 1, 1 },
 	{ RING_MAIL, 1, ARMOR_SYM, 1, 1 },
@@ -61,7 +62,7 @@ struct trobj Knight[] = {
 	{ 0, 0, 0, 0, 0 }
 };
 
-struct trobj Speleologist[] = {
+static struct trobj Speleologist[] = {
 	{ STUDDED_LEATHER_ARMOR, 0, ARMOR_SYM, 1, 1 },
 	{ UNDEF_TYP, 0, POTION_SYM, 2, 0 },
 	{ FOOD_RATION, 0, FOOD_SYM, 3, 1 },
@@ -70,12 +71,12 @@ struct trobj Speleologist[] = {
 	{ 0, 0, 0, 0, 0}
 };
 
-struct trobj Tinopener[] = {
+static struct trobj Tinopener[] = {
 	{ CAN_OPENER, 0, TOOL_SYM, 1, 1 },
 	{ 0, 0, 0, 0, 0 }
 };
 
-struct trobj Tourist[] = {
+static struct trobj Tourist[] = {
 	{ UNDEF_TYP, 0, FOOD_SYM, 10, 1 },
 	{ POT_EXTRA_HEALING, 0, POTION_SYM, 2, 0 },
 	{ EXPENSIVE_CAMERA, 0, TOOL_SYM, 1, 1 },
@@ -83,7 +84,7 @@ struct trobj Tourist[] = {
 	{ 0, 0, 0, 0, 0 }
 };
 
-struct trobj Wizard[] = {
+static struct trobj Wizard[] = {
 	{ ELVEN_CLOAK, 0, ARMOR_SYM, 1, 1 },
 	{ UNDEF_TYP, UNDEF_SPE, WAND_SYM, 2, 0 },
 	{ UNDEF_TYP, UNDEF_SPE, RING_SYM, 2, 0 },
@@ -92,17 +93,22 @@ struct trobj Wizard[] = {
 	{ 0, 0, 0, 0, 0 }
 };
 
-u_init(){
-register int i;
-char exper = 'y', pc;
-extern char readchar();
+static void ini_inv(struct trobj *trop);
+#ifdef WIZARD
+static void wiz_inv(void);
+#endif
+static int role_index(char pc);
+
+void u_init(void) {
+	int i;
+	char exper = 'y', pc;
 	if(flags.female)	/* should have been set in HACKOPTIONS */
 		roles[4] = "Cave-woman";
 	for(i = 0; i < NR_OF_ROLES; i++)
 		rolesyms[i] = roles[i][0];
 	rolesyms[i] = 0;
 
-	if(pc = pl_character[0]) {
+	if((pc = pl_character[0])) {
 		if('a' <= pc && pc <= 'z') pc += 'A'-'a';
 		if((i = role_index(pc)) >= 0)
 			goto got_suffix;	/* implies experienced */
@@ -135,7 +141,7 @@ extern char readchar();
 	}
 	printf("? [%s] ", rolesyms);
 
-	while(pc = readchar()) {
+	while((pc = readchar())) {
 		if('a' <= pc && pc <= 'z') pc += 'A'-'a';
 		if((i = role_index(pc)) >= 0) {
 			printf("%c\n", pc);	/* echo */
@@ -235,7 +241,7 @@ got_suffix:
 	}
 	find_ac();
 	if(!rn2(20)) {
-		register int d = rn2(7) - 2;	/* biased variation */
+		int d = rn2(7) - 2;	/* biased variation */
 		u.ustr += d;
 		u.ustrmax += d;
 	}
@@ -249,9 +255,8 @@ got_suffix:
 		u.ustr++, u.ustrmax++;
 }
 
-ini_inv(trop) register struct trobj *trop; {
-register struct obj *obj;
-extern struct obj *mkobj();
+static void ini_inv(struct trobj *trop) {
+	struct obj *obj;
 	while(trop->trolet) {
 		obj = mkobj(trop->trolet);
 		obj->known = trop->trknown;
@@ -305,11 +310,10 @@ extern struct obj *mkobj();
 }
 
 #ifdef WIZARD
-wiz_inv(){
-register struct trobj *trop = &Extra_objs[0];
-extern char *getenv();
-register char *ep = getenv("INVENT");
-register int type;
+static void wiz_inv(void) {
+	struct trobj *trop = &Extra_objs[0];
+	char *ep = getenv("INVENT");
+	int type;
 	while(ep && *ep) {
 		type = atoi(ep);
 		ep = index(ep, ',');
@@ -332,9 +336,9 @@ register int type;
 }
 #endif /* WIZARD */
 
-plnamesuffix() {
-register char *p;
-	if(p = rindex(plname, '-')) {
+void plnamesuffix(void) {
+	char *p;
+	if((p = rindex(plname, '-'))) {
 		*p = 0;
 		pl_character[0] = p[1];
 		pl_character[1] = 0;
@@ -345,13 +349,12 @@ register char *p;
 	}
 }
 
-role_index(pc)
-char pc;
-{		/* must be called only from u_init() */
-		/* so that rolesyms[] is defined */
-	register char *cp;
+static int role_index(char pc) {
+	/* must be called only from u_init() */
+	/* so that rolesyms[] is defined */
+	char *cp;
 
-	if(cp = index(rolesyms, pc))
+	if((cp = index(rolesyms, pc)))
 		return(cp - rolesyms);
 	return(-1);
 }
