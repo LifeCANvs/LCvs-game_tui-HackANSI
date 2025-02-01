@@ -1,19 +1,20 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.vault.c - version 1.0.2 */
 
-#include	"hack.h"
+#include <stdlib.h>
+
+#include "hack.h"
+
 #ifdef QUEST
-setgd(/* mtmp */) /* struct monst *mtmp; */ {}
-gd_move() { return(2); }
-gddead(mtmp) struct monst *mtmp; {}
-replgd(mtmp,mtmp2) struct monst *mtmp, *mtmp2; {}
-invault(){}
+void setgd(void) {}
+int gd_move(void) { return(2); }
+void gddead(void) {}
+void replgd(struct monst *mtmp, struct monst *mtmp2) {}
+void invault(void) {}
 
 #else
 
 
-#include "def.mkroom.h"
-extern struct monst *makemon();
 #define	FCSIZ	(ROWNO+COLNO)
 struct fakecorridor {
 	xchar fx,fy,ftyp;
@@ -33,11 +34,9 @@ static struct monst *guard;
 static int gdlevel;
 #define	EGD	((struct egd *)(&(guard->mextra[0])))
 
-static
-restfakecorr()
-{
-	register fcx,fcy,fcbeg;
-	register struct rm *crm;
+static void restfakecorr(void) {
+	int fcx,fcy,fcbeg;
+	struct rm *crm;
 
 	while((fcbeg = EGD->fcbeg) < EGD->fcend) {
 		fcx = EGD->fakecorr[fcbeg].fx;
@@ -56,10 +55,8 @@ restfakecorr()
 	guard = 0;
 }
 
-static
-goldincorridor()
-{
-	register int fci;
+static int goldincorridor(void) {
+	int fci;
 
 	for(fci = EGD->fcbeg; fci < EGD->fcend; fci++)
 		if(g_at(EGD->fakecorr[fci].fx, EGD->fakecorr[fci].fy))
@@ -67,25 +64,25 @@ goldincorridor()
 	return(0);
 }
 
-setgd(){
-register struct monst *mtmp;
+void setgd(void) {
+	struct monst *mtmp;
 	for(mtmp = fmon; mtmp; mtmp = mtmp->nmon) if(mtmp->isgd){
 		guard = mtmp;
 		gdlevel = dlevel;
 		return;
 	}
- guard = 0;
+	guard = 0;
 }
 
-invault(){
-register tmp = inroom(u.ux, u.uy);
+void invault(void) {
+	int tmp = inroom(u.ux, u.uy);
     if(tmp < 0 || rooms[tmp].rtype != VAULT) {
 	u.uinvault = 0;
 	return;
     }
     if(++u.uinvault % 50 == 0 && (!guard || gdlevel != dlevel)) {
 	char buf[BUFSZ];
-	register x,y,dd,gx,gy;
+	int x,y,dd,gx,gy;
 
 	/* first find the goal for the guard */
 	for(dd = 1; (dd < ROWNO || dd < COLNO); dd++) {
@@ -108,7 +105,7 @@ fnd:
 	/* next find a good place for a door in the wall */
 	x = u.ux; y = u.uy;
 	while(levl[x][y].typ == ROOM) {
-		register int dx,dy;
+		int dx,dy;
 
 		dx = (gx > x) ? 1 : (gx < x) ? -1 : 0;
 		dy = (gy > y) ? 1 : (gy < y) ? -1 : 0;
@@ -161,10 +158,10 @@ fnd:
     }
 }
 
-gd_move(){
-register int x,y,dx,dy,gx,gy,nx,ny,typ;
-register struct fakecorridor *fcp;
-register struct rm *crm;
+int gd_move(void) {
+	int x,y,dx,dy,gx,gy,nx,ny,typ;
+	struct fakecorridor *fcp;
+	struct rm *crm;
 	if(!guard || gdlevel != dlevel){
 		impossible("Where is the guard?");
 		return(2);	/* died */
@@ -182,7 +179,7 @@ register struct rm *crm;
 	    if(nx == x || ny == y) if(nx != x || ny != y)
 	    if(isok(nx,ny))
 	    if(!IS_WALL(typ = (crm = &levl[nx][ny])->typ) && typ != POOL) {
-		register int i;
+		int i;
 		for(i = EGD->fcbeg; i < EGD->fcend; i++)
 			if(EGD->fakecorr[i].fx == nx &&
 			   EGD->fakecorr[i].fy == ny)
@@ -245,13 +242,11 @@ newpos:
 	return(1);
 }
 
-gddead(){
+void gddead(void) {
 	guard = 0;
 }
 
-replgd(mtmp,mtmp2)
-register struct monst *mtmp, *mtmp2;
-{
+void replgd(struct monst *mtmp, struct monst *mtmp2) {
 	if(mtmp == guard)
 		guard = mtmp2;
 }
