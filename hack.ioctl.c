@@ -4,8 +4,11 @@
 /* This cannot be part of hack.tty.c (as it was earlier) since on some
    systems (e.g. MUNIX) the include files <termio.h> and <sgtty.h>
    define the same constants, and the C preprocessor complains. */
+
 #include <stdio.h>
+
 #include "config.h"
+
 #ifdef BSD
 #include	<sgtty.h>
 struct ltchars ltchars, ltchars0;
@@ -14,7 +17,7 @@ struct ltchars ltchars, ltchars0;
 struct termio termio;
 #endif /* BSD */
 
-getioctls() {
+void getioctls(void) {
 #ifdef BSD
 	(void) ioctl(fileno(stdin), (int) TIOCGLTC, (char *) &ltchars);
 	(void) ioctl(fileno(stdin), (int) TIOCSLTC, (char *) &ltchars0);
@@ -23,7 +26,7 @@ getioctls() {
 #endif /* BSD */
 }
 
-setioctls() {
+void setioctls(void) {
 #ifdef BSD
 	(void) ioctl(fileno(stdin), (int) TIOCSLTC, (char *) &ltchars);
 #else
@@ -32,7 +35,7 @@ setioctls() {
 }
 
 #ifdef SUSPEND		/* implies BSD */
-dosuspend() {
+int dosuspend(void) {
 #include	<signal.h>
 #ifdef SIGTSTP
 	if(signal(SIGTSTP, SIG_IGN) == SIG_DFL) {
