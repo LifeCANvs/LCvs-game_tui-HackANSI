@@ -227,11 +227,12 @@ void delay_output(void) {
 	/* BUG: if the padding character is visible, as it is on the 5620
 	   then this looks terrible. */
 	if(!flags.nonull)
-		tputs("50", 1, xputc);
+		/* tputs("50", 1, xputc); */
 
 		/* cbosgd!cbcephus!pds for SYS V R2 */
 		/* is this terminfo, or what? */
 		/* tputs("$<50>", 1, xputc); */
+		tputs("$<50>", 1, xputc);
 
 #ifdef TC_OSPEED
 	else if(ospeed > 0 || ospeed < SIZE(tmspc10)) if(CM) {
