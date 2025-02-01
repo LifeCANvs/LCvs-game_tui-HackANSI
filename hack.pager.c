@@ -5,21 +5,19 @@
 /* Also readmail() and doshell(), and generally the things that
    contact the outside world. */
 
-#include	<stdio.h>
-#include	<signal.h>
-#include "hack.h"
-extern int CO, LI;	/* usually COLNO and ROWNO+2 */
-extern char *CD;
-extern char quitchars[];
-extern char *getenv(), *getlogin();
-int done1();
+#include <stdlib.h>
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
 
-dowhatis()
-{
+#include "hack.h"
+
+static void page_more(FILE *fp, int strip);
+
+int dowhatis(void) {
 	FILE *fp;
 	char bufr[BUFSZ+6];
-	register char *buf = &bufr[6], *ep, q;
-	extern char readchar();
+	char *buf = &bufr[6], *ep, q;
 
 	if(!(fp = fopen(DATAFILE, "r")))
 		pline("Cannot open data file!");
@@ -58,17 +56,15 @@ dowhatis()
 /* make the paging of a file interruptible */
 static int got_intrup;
 
-intruph(){
+static void intruph(int signum) {
 	got_intrup++;
 }
 
 /* simple pager, also used from dohelp() */
-page_more(fp,strip)
-FILE *fp;
-int strip;	/* nr of chars to be stripped from each line (0 or 1) */
-{
-	register char *bufr, *ep;
-	int (*prevsig)() = signal(SIGINT, intruph);
+static void page_more(FILE *fp, int strip) {
+	/* nr of chars to be stripped from each line (0 or 1) */
+	char *bufr, *ep;
+	void (*prevsig)(int) = signal(SIGINT, intruph);
 
 	set_pager(0);
 	bufr = (char *) alloc((unsigned) CO);
@@ -93,13 +89,14 @@ ret:
 static boolean whole_screen = TRUE;
 #define	PAGMIN	12	/* minimum # of lines for page below level map */
 
-set_whole_screen() {	/* called in termcap as soon as LI is known */
+void set_whole_screen(void) {
+	/* called in termcap as soon as LI is known */
 	whole_screen = (LI-ROWNO-2 <= PAGMIN || !CD);
 }
 
 #ifdef NEWS
-readnews() {
-	register int ret;
+int readnews(void) {
+	int ret;
 
 	whole_screen = TRUE;	/* force a docrt(), our first */
 	ret = page_file(NEWS, TRUE);
@@ -108,9 +105,8 @@ readnews() {
 }
 #endif /* NEWS */
 
-set_pager(mode)
-register int mode;	/* 0: open  1: wait+close  2: close */
-{
+void set_pager(int mode) {
+	/* 0: open  1: wait+close  2: close */
 	static boolean so;
 	if(mode == 0) {
 		if(!whole_screen) {
@@ -138,11 +134,8 @@ register int mode;	/* 0: open  1: wait+close  2: close */
 	}
 }
 
-page_line(s)		/* returns 1 if we should quit */
-register char *s;
-{
-	extern char morc;
-
+int page_line(char *s) {
+	/* returns 1 if we should quit */
 	if(cury == LI-1) {
 		if(!*s)
 			return(0);	/* suppress blank lines at top */
@@ -176,17 +169,14 @@ register char *s;
  *	cornline(3, 0)		: cleanup
  */
 
-cornline(mode, text)
-int mode;
-char *text;
-{
+void cornline(int mode, char *text) {
 	static struct line {
 		struct line *next_line;
 		char *line_text;
 	} *texthead, *texttail;
 	static int maxlen;
 	static int linect;
-	register struct line *tl;
+	struct line *tl;
 
 	if(mode == 0) {
 		texthead = 0;
@@ -200,7 +190,7 @@ char *text;
 	}
 
 	if(mode == 1) {
-	    register int len;
+	    int len;
 
 	    if(!text) return;	/* superfluous, just to be sure */
 	    linect++;
@@ -225,7 +215,7 @@ char *text;
 		pline(texthead->line_text);
 	else
 	if(mode == 2) {
-	    register int curline, lth;
+	    int curline, lth;
 
 	    if(flags.toplin == 1) more();	/* ab@unido */
 	    remember_topl();
@@ -267,14 +257,13 @@ char *text;
 	}
 
 cleanup:
-	while(tl = texthead) {
+	while((tl = texthead)) {
 		texthead = tl->next_line;
 		free((char *) tl);
 	}
 }
 
-dohelp()
-{
+int dohelp(void) {
 	char c;
 
 	pline ("Long or short help? ");
@@ -285,23 +274,19 @@ dohelp()
 	return(0);
 }
 
-page_file(fnam, silent)	/* return: 0 - cannot open fnam; 1 - otherwise */
-register char *fnam;
-boolean silent;
-{
+int page_file(char *fnam, boolean silent) {
+	/* return: 0 - cannot open fnam; 1 - otherwise */
 #ifdef DEF_PAGER			/* this implies that UNIX is defined */
       {
 	/* use external pager; this may give security problems */
 
-	register int fd = open(fnam, 0);
+	int fd = open(fnam, 0);
 
 	if(fd < 0) {
 		if(!silent) pline("Cannot open %s.", fnam);
 		return(0);
 	}
 	if(child(1)){
-		extern char *catmore;
-
 		/* Now that child() does a setuid(getuid()) and a chdir(),
 		   we may not be able to open file fnam anymore, so make
 		   it stdin. */
@@ -336,10 +321,10 @@ boolean silent;
 
 #ifdef UNIX
 #ifdef SHELL
-dosh(){
-register char *str;
+int dosh(void) {
+	char *str;
 	if(child(0)) {
-		if(str = getenv("SHELL"))
+		if((str = getenv("SHELL")))
 			execl(str, str, (char *) 0);
 		else
 			execl("/bin/sh", "sh", (char *) 0);
@@ -369,8 +354,8 @@ union wait {		/* used only for the cast  (union wait *) 0  */
 #endif /* BSD */
 #endif /* NOWAITINCLUDE */
 
-child(wt) {
-register int f = fork();
+int child(int wt) {
+	int f = fork();
 	if(f == 0){		/* child */
 		settty((char *) 0);		/* also calls end_screen() */
 		(void) setuid(getuid());
@@ -387,7 +372,7 @@ register int f = fork();
 	/* fork succeeded; wait for child to exit */
 	(void) signal(SIGINT,SIG_IGN);
 	(void) signal(SIGQUIT,SIG_IGN);
-	(void) wait((union wait *) 0);
+	(void) wait(NULL);
 	gettty();
 	setftty();
 	(void) signal(SIGINT,done1);
