@@ -2,9 +2,10 @@
 /* hack.version.c - version 1.0.3 */
 /* $Header: hack.version.c,v 1.5 85/05/09 00:40:41 aeb Exp $ */
 
-#include	"date.h"
+#include "hack.h"
+#include "date.h"
 
-doversion(){
+int doversion(void) {
 	pline("%s 1.0.3 - last edit %s.", (
 #ifdef QUEST
 		"Quest"
