@@ -1,14 +1,11 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.zap.c - version 1.0.3 */
 
+#include <stdlib.h>
+
 #include "hack.h"
 
-extern struct obj *mkobj_at();
-extern struct monst *makemon(), *mkmon_at(), youmonst;
-struct monst *bhit();
-char *exclam();
-
-char *fl[]= {
+static char *fl[]= {
 	"magic missile",
 	"bolt of fire",
 	"sleep ray",
@@ -16,12 +13,15 @@ char *fl[]= {
 	"death ray"
 };
 
+static char dirlet(int dx, int dy);
+static int zhit(struct monst *mon, int type);
+static int revive(struct obj *obj);
+static void rloco(struct obj *obj);
+static void burn_scrolls(void);
+
 /* Routines for IMMEDIATE wands. */
 /* bhitm: monster mtmp was hit by the effect of wand otmp */
-bhitm(mtmp, otmp)
-register struct monst *mtmp;
-register struct obj *otmp;
-{
+static int bhitm(struct monst *mtmp, struct obj *otmp) {
 	wakeup(mtmp);
 	switch(otmp->otyp) {
 	case WAN_STRIKING:
@@ -66,12 +66,12 @@ register struct obj *otmp;
 	default:
 		impossible("What an interesting wand (%u)", otmp->otyp);
 	}
+	return 0;
 }
 
-bhito(obj, otmp)	/* object obj was hit by the effect of wand otmp */
-register struct obj *obj, *otmp;	/* returns TRUE if sth was done */
-{
-	register int res = TRUE;
+int bhito(struct obj *obj, struct obj *otmp) {
+	/* object obj was hit by the effect of wand otmp */
+	int res = TRUE;
 
 	if(obj == uball || obj == uchain)
 		res = FALSE;
@@ -118,9 +118,8 @@ register struct obj *obj, *otmp;	/* returns TRUE if sth was done */
 	return(res);
 }
 
-dozap()
-{
-	register struct obj *obj;
+int dozap(void) {
+	struct obj *obj;
 	xchar zx,zy;
 
 	obj = getobj("/", "zap");
@@ -258,29 +257,20 @@ dozap()
 	return(1);
 }
 
-char *
-exclam(force)
-register int force;
-{
+char *exclam(int force) {
 	/* force == 0 occurs e.g. with sleep ray */
 	/* note that large force is usual with wands so that !! would
 		require information about hand/weapon/wand */
 	return( (force < 0) ? "?" : (force <= 4) ? "." : "!" );
 }
 
-hit(str,mtmp,force)
-register char *str;
-register struct monst *mtmp;
-register char *force;		/* usually either "." or "!" */
-{
+void hit(char *str, struct monst *mtmp, char *force) {
+	/* usually either "." or "!" */
 	if(!cansee(mtmp->mx,mtmp->my)) pline("The %s hits it.", str);
 	else pline("The %s hits %s%s", str, monnam(mtmp), force);
 }
 
-miss(str,mtmp)
-register char *str;
-register struct monst *mtmp;
-{
+void miss(char *str, struct monst *mtmp) {
 	if(!cansee(mtmp->mx,mtmp->my)) pline("The %s misses it.",str);
 	else pline("The %s misses %s.",str,monnam(mtmp));
 }
@@ -293,16 +283,15 @@ register struct monst *mtmp;
    these an argument function is called. */
 /* check !u.uswallow before calling bhit() */
 
-struct monst *
-bhit(ddx,ddy,range,sym,fhitm,fhito,obj)
-register int ddx,ddy,range;		/* direction and range */
-char sym;				/* symbol displayed on path */
-int (*fhitm)(), (*fhito)();		/* fns called when mon/obj hit */
-struct obj *obj;			/* 2nd arg to fhitm/fhito */
-{
-	register struct monst *mtmp;
-	register struct obj *otmp;
-	register int typ;
+struct monst *bhit(int ddx, int ddy, int range, char sym, int (*fhitm)(),
+		   int (*fhito)(), struct obj *obj) {
+	/* int ddx,ddy,range;           direction and range */
+	/* char sym;                    symbol displayed on path */
+	/* int (*fhitm)(), (*fhito)();  fns called when mon/obj hit */
+	/* struct obj *obj;             2nd arg to fhitm/fhito */
+	struct monst *mtmp;
+	struct obj *otmp;
+	int typ;
 
 	bhitpos.x = u.ux;
 	bhitpos.y = u.uy;
@@ -312,7 +301,7 @@ struct obj *obj;			/* 2nd arg to fhitm/fhito */
 		bhitpos.x += ddx;
 		bhitpos.y += ddy;
 		typ = levl[bhitpos.x][bhitpos.y].typ;
-		if(mtmp = m_at(bhitpos.x,bhitpos.y)){
+		if((mtmp = m_at(bhitpos.x,bhitpos.y))){
 			if(sym) {
 				tmp_at(-1, -1);	/* close call */
 				return(mtmp);
@@ -338,12 +327,10 @@ struct obj *obj;			/* 2nd arg to fhitm/fhito */
 	return(0);
 }
 
-struct monst *
-boomhit(dx,dy) {
-	register int i, ct;
-	register struct monst *mtmp;
+struct monst *boomhit(int dx, int dy) {
+	int i, ct;
+	struct monst *mtmp;
 	char sym = ')';
-	extern schar xdir[], ydir[];
 
 	bhitpos.x = u.ux;
 	bhitpos.y = u.uy;
@@ -358,7 +345,7 @@ boomhit(dx,dy) {
 		dy = ydir[i];
 		bhitpos.x += dx;
 		bhitpos.y += dy;
-		if(mtmp = m_at(bhitpos.x, bhitpos.y)){
+		if((mtmp = m_at(bhitpos.x, bhitpos.y))){
 			tmp_at(-1,-1);
 			return(mtmp);
 		}
@@ -384,8 +371,7 @@ boomhit(dx,dy) {
 	return(0);
 }
 
-char
-dirlet(dx,dy) register dx,dy; {
+static char dirlet(int dx, int dy) {
 	return
 		(dx == dy) ? '\\' : (dx && dy) ? '/' : dx ? '-' : '|';
 }
@@ -393,13 +379,9 @@ dirlet(dx,dy) register dx,dy; {
 /* type == -1: monster spitting fire at you */
 /* type == -1,-2,-3: bolts sent out by wizard */
 /* called with dx = dy = 0 with vertical bolts */
-buzz(type,sx,sy,dx,dy)
-register int type;
-register xchar sx,sy;
-register int dx,dy;
-{
+void buzz(int type, xchar sx, xchar sy, int dx, int dy) {
 	int abstype = abs(type);
-	register char *fltxt = (type == -1) ? "blaze of fire" : fl[abstype];
+	char *fltxt = (type == -1) ? "blaze of fire" : fl[abstype];
 	struct rm *lev;
 	xchar range;
 	struct monst *mon;
@@ -540,11 +522,9 @@ register int dx,dy;
 	Tmp_at(-1,-1);
 }
 
-zhit(mon,type)			/* returns damage to mon */
-register struct monst *mon;
-register type;
-{
-	register int tmp = 0;
+static int zhit(struct monst *mon, int type) {
+	/* returns damage to mon */
+	int tmp = 0;
 
 	switch(type) {
 	case 0:			/* magic missile */
@@ -576,10 +556,8 @@ register type;
 #define	CORPSE_I_TO_C(otyp)	(char) ((otyp >= DEAD_ACID_BLOB)\
 		     ?  'a' + (otyp - DEAD_ACID_BLOB)\
 		     :	'@' + (otyp - DEAD_HUMAN))
-revive(obj)
-register struct obj *obj;
-{
-	register struct monst *mtmp;
+static int revive(struct obj *obj) {
+	struct monst *mtmp;
 
 	if(obj->olet == FOOD_SYM && obj->otyp > CORPSE) {
 		/* do not (yet) revive shopkeepers */
@@ -591,10 +569,8 @@ register struct obj *obj;
 	return(!!mtmp);		/* TRUE if some monster created */
 }
 
-rloco(obj)
-register struct obj *obj;
-{
-	register tx,ty,otx,oty;
+static void rloco(struct obj *obj) {
+	int tx,ty,otx,oty;
 
 	otx = obj->ox;
 	oty = obj->oy;
@@ -608,9 +584,9 @@ register struct obj *obj;
 		newsym(otx,oty);
 }
 
-fracture_rock(obj)	/* fractured by pick-axe or wand of striking */
-register struct obj *obj;			   /* no texts here! */
-{
+void fracture_rock(struct obj *obj) {
+	/* fractured by pick-axe or wand of striking */
+	/* no texts here! */
 	/* unpobj(obj); */
 	obj->otyp = ROCK;
 	obj->quan = 7 + rn2(60);
@@ -620,10 +596,9 @@ register struct obj *obj;			   /* no texts here! */
 		prl(obj->ox,obj->oy);
 }
 
-burn_scrolls()
-{
-	register struct obj *obj, *obj2;
-	register int cnt = 0;
+static void burn_scrolls(void) {
+	struct obj *obj, *obj2;
+	int cnt = 0;
 
 	for(obj = invent; obj; obj = obj2) {
 		obj2 = obj->nobj;
