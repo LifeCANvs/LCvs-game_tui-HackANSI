@@ -2,18 +2,17 @@
 /* hack.mkmaze.c - version 1.0.2 */
 
 #include "hack.h"
-#include "def.mkroom.h"		/* not really used */
-extern struct monst *makemon();
-extern struct permonst pm_wizard;
-extern struct obj *mkobj_at();
-extern coord mazexy();
-struct permonst hell_hound =
+
+static struct permonst hell_hound =
 	{ "hell hound", 'd', 12, 14, 2, 3, 6, 0 };
 
-makemaz()
-{
+static void walkfrom(int x, int y);
+static void move(int *x, int *y, int dir);
+static int okay(int x, int y, int dir);
+
+void makemaz(void) {
 	int x,y;
-	register zx,zy;
+	int zx,zy;
 	coord mm;
 	boolean al = (dlevel >= 30 && !flags.made_amulet);
 
@@ -21,7 +20,7 @@ makemaz()
 		for(y = 2; y < ROWNO-1; y++)
 			levl[x][y].typ = (x%2 && y%2) ? 0 : HWALL;
 	if(al) {
-	    register struct monst *mtmp;
+	    struct monst *mtmp;
 
 	    zx = 2*(COLNO/4) - 1;
 	    zy = 2*(ROWNO/4) - 1;
@@ -34,9 +33,9 @@ makemaz()
 	    (void) mkobj_at(AMULET_SYM, zx, zy);
 	    flags.made_amulet = 1;
 	    walkfrom(zx+4, zy);
-	    if(mtmp = makemon(&hell_hound, zx, zy))
+	    if((mtmp = makemon(&hell_hound, zx, zy)))
 		mtmp->msleep = 1;
-	    if(mtmp = makemon(PM_WIZARD, zx+1, zy)) {
+	    if((mtmp = makemon(PM_WIZARD, zx+1, zy))) {
 		mtmp->msleep = 1;
 		flags.no_of_wizards = 1;
 	    }
@@ -86,9 +85,9 @@ makemaz()
 	xdnstair = ydnstair = 0;
 }
 
-walkfrom(x,y) int x,y; {
-register int q,a,dir;
-int dirs[4];
+static void walkfrom(int x, int y) {
+	int q,a,dir;
+	int dirs[4];
 	levl[x][y].typ = ROOM;
 	while(1) {
 		q = 0;
@@ -103,10 +102,7 @@ int dirs[4];
 	}
 }
 
-move(x,y,dir)
-register int *x, *y;
-register int dir;
-{
+static void move(int *x, int *y, int dir) {
 	switch(dir){
 		case 0: --(*y); break;
 		case 1: (*x)++; break;
@@ -115,10 +111,7 @@ register int dir;
 	}
 }
 
-okay(x,y,dir)
-int x,y;
-register int dir;
-{
+static int okay(int x, int y, int dir) {
 	move(&x,&y,dir);
 	move(&x,&y,dir);
 	if(x<3 || y<3 || x>COLNO-3 || y>ROWNO-3 || levl[x][y].typ != 0)
@@ -127,8 +120,7 @@ register int dir;
 		return(1);
 }
 
-coord
-mazexy(){
+coord mazexy(void) {
 	coord mm;
 	mm.x = 3 + 2*rn2(COLNO/2 - 2);
 	mm.y = 3 + 2*rn2(ROWNO/2 - 2);
