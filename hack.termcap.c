@@ -1,28 +1,28 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.termcap.c - version 1.0.3 */
 
+#include <stdlib.h>
 #include <stdio.h>
-#include "config.h"	/* for ROWNO and COLNO */
-#include "def.flag.h"	/* for flags.nonull */
-extern char *tgetstr(), *tgoto(), *getenv();
-extern long *alloc();
+#include <termcap.h>
 
-#ifndef lint
-extern			/* it is defined in libtermlib (libtermcap) */
-#endif /* lint */
-	short ospeed;		/* terminal baudrate; used by tputs */
+#include "hack.h"
+
 static char tbuf[512];
-static char *HO, *CL, *CE, *UP, *CM, *ND, *XD, *BC, *SO, *SE, *TI, *TE;
+static char *HO, *CL, *CE, *tc_UP, *CM, *ND, *XD, *tc_BC, *SO, *SE, *TI, *TE;
 static char *VS, *VE;
 static int SG;
-static char PC = '\0';
+static char tc_PC = '\0';
 char *CD;		/* tested in pri.c: docorner() */
 int CO, LI;		/* used in pri.c and whatis.c */
 
-startup()
-{
-	register char *term;
-	register char *tptr;
+static void nocmov(int x, int y);
+static void cmov(int x, int y);
+static int xputc(int c);
+static void xputs(char *s);
+
+void startup(void) {
+	char *term;
+	char *tptr;
 	char *tbufptr, *pc;
 
 	tptr = (char *) alloc(1024);
@@ -34,14 +34,14 @@ startup()
 		flags.nonull = 1;	/* this should be a termcap flag */
 	if(tgetent(tptr, term) < 1)
 		error("Unknown terminal type: %s.", term);
-	if(pc = tgetstr("pc", &tbufptr))
-		PC = *pc;
-	if(!(BC = tgetstr("bc", &tbufptr))) {	
+	if((pc = tgetstr("pc", &tbufptr)))
+		tc_PC = *pc;
+	if(!(tc_BC = tgetstr("bc", &tbufptr))) {	
 		if(!tgetflag("bs"))
 			error("Terminal must backspace.");
-		BC = tbufptr;
+		tc_BC = tbufptr;
 		tbufptr += 2;
-		*BC = '\b';
+		*tc_BC = '\b';
 	}
 	HO = tgetstr("ho", &tbufptr);
 	CO = tgetnum("co");
@@ -54,7 +54,7 @@ startup()
 	if(tgetflag("os"))
 		error("Hack can't have OS.");
 	CE = tgetstr("ce", &tbufptr);
-	UP = tgetstr("up", &tbufptr);
+	tc_UP = tgetstr("up", &tbufptr);
 	/* It seems that xd is no longer supported, and we should use
 	   a linefeed instead; unfortunately this requires resetting
 	   CRMOD, and many output routines will have to be modified
@@ -62,7 +62,7 @@ startup()
 	XD = tgetstr("xd", &tbufptr);
 /* not: 		XD = tgetstr("do", &tbufptr); */
 	if(!(CM = tgetstr("cm", &tbufptr))) {
-		if(!UP && !HO)
+		if(!tc_UP && !HO)
 			error("Hack needs CM or UP or HO.");
 		printf("Playing hack on terminals without cm is suspect...\n");
 		getret();
@@ -77,25 +77,21 @@ startup()
 	free(tptr);
 }
 
-start_screen()
-{
+void start_screen(void) {
 	xputs(TI);
 	xputs(VS);
 }
 
-end_screen()
-{
+void end_screen(void) {
 	xputs(VE);
 	xputs(TE);
 }
 
 /* Cursor movements */
-extern xchar curx, cury;
 
-curs(x, y)
-register int x, y;	/* not xchar: perhaps xchar is unsigned and
-			   curx-x would be unsigned as well */
-{
+void curs(int x, int y) {
+	/* not xchar: perhaps xchar is unsigned and
+	   curx-x would be unsigned as well */
 
 	if (y == cury && x == curx)
 		return;
@@ -115,12 +111,11 @@ register int x, y;	/* not xchar: perhaps xchar is unsigned and
 		cmov(x, y);
 }
 
-nocmov(x, y)
-{
+static void nocmov(int x, int y) {
 	if (cury > y) {
-		if(UP) {
+		if(tc_UP) {
 			while (cury > y) {	/* Go up. */
-				xputs(UP);
+				xputs(tc_UP);
 				cury--;
 			}
 		} else if(CM) {
@@ -154,35 +149,33 @@ nocmov(x, y)
 		}
 	} else if (curx > x) {
 		while (curx > x) {	/* Go to the left. */
-			xputs(BC);
+			xputs(tc_BC);
 			curx--;
 		}
 	}
 }
 
-cmov(x, y)
-register x, y;
-{
+static void cmov(int x, int y) {
 	xputs(tgoto(CM, x-1, y-1));
 	cury = y;
 	curx = x;
 }
 
-xputc(c) char c; {
+static int xputc(int c) {
 	(void) fputc(c, stdout);
 }
 
-xputs(s) char *s; {
+static void xputs(char *s) {
 	tputs(s, 1, xputc);
 }
 
-cl_end() {
+void cl_end(void) {
 	if(CE)
 		xputs(CE);
 	else {	/* no-CE fix - free after Harold Rynes */
 		/* this looks terrible, especially on a slow terminal
 		   but is better than nothing */
-		register cx = curx, cy = cury;
+		int cx = curx, cy = cury;
 
 		while(curx < COLNO) {
 			xputc(' ');
@@ -192,13 +185,12 @@ cl_end() {
 	}
 }
 
-clear_screen() {
+void clear_screen(void) {
 	xputs(CL);
 	curx = cury = 1;
 }
 
-home()
-{
+void home(void) {
 	if(HO)
 		xputs(HO);
 	else if(CM)
@@ -208,24 +200,20 @@ home()
 	curx = cury = 1;
 }
 
-standoutbeg()
-{
+void standoutbeg(void) {
 	if(SO) xputs(SO);
 }
 
-standoutend()
-{
+void standoutend(void) {
 	if(SE) xputs(SE);
 }
 
-backsp()
-{
-	xputs(BC);
+void backsp(void) {
+	xputs(tc_BC);
 	curx--;
 }
 
-bell()
-{
+void bell(void) {
 	(void) putchar('\007');		/* curx does not change */
 	(void) fflush(stdout);
 }
@@ -234,7 +222,7 @@ static short tmspc10[] = {		/* from termcap */
 	0, 2000, 1333, 909, 743, 666, 500, 333, 166, 83, 55, 41, 20, 10, 5
 };
 
-delay_output() {
+void delay_output(void) {
 	/* delay 50 ms - could also use a 'nap'-system call */
 	/* BUG: if the padding character is visible, as it is on the 5620
 	   then this looks terrible. */
@@ -247,8 +235,8 @@ delay_output() {
 
 	else if(ospeed > 0 || ospeed < SIZE(tmspc10)) if(CM) {
 		/* delay by sending cm(here) an appropriate number of times */
-		register int cmlen = strlen(tgoto(CM, curx-1, cury-1));
-		register int i = 500 + tmspc10[ospeed]/2;
+		int cmlen = strlen(tgoto(CM, curx-1, cury-1));
+		int i = 500 + tmspc10[ospeed]/2;
 
 		while(i > 0) {
 			cmov(curx, cury);
@@ -257,13 +245,14 @@ delay_output() {
 	}
 }
 
-cl_eos()			/* free after Robert Viduya */
-{				/* must only be called with curx = 1 */
+void cl_eos(void) {
+	/* free after Robert Viduya */
+	/* must only be called with curx = 1 */
 
 	if(CD)
 		xputs(CD);
 	else {
-		register int cx = curx, cy = cury;
+		int cx = curx, cy = cury;
 		while(cury <= LI-2) {
 			cl_end();
 			xputc('\n');
