@@ -1,17 +1,15 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.wield.c - version 1.0.3 */
 
-#include	"hack.h"
-extern struct obj zeroobj;
+#include "hack.h"
 
-setuwep(obj) register struct obj *obj; {
+void setuwep(struct obj *obj) {
 	setworn(obj, W_WEP);
 }
 
-dowield()
-{
-	register struct obj *wep;
-	register int res = 0;
+int dowield(void) {
+	struct obj *wep;
+	int res = 0;
 
 	multi = 0;
 	if(!(wep = getobj("#-)", "wield"))) /* nothing */;
@@ -44,7 +42,7 @@ dowield()
  return(res);
 }
 
-corrode_weapon(){
+void corrode_weapon(void) {
 	if(!uwep || uwep->olet != WEAPON_SYM) return;	/* %% */
 	if(uwep->rustfree)
 		pline("Your %s not affected.", aobjnam(uwep, "are"));
@@ -54,12 +52,9 @@ corrode_weapon(){
 	}
 }
 
-chwepon(otmp,amount)
-register struct obj *otmp;
-register amount;
-{
-register char *color = (amount < 0) ? "black" : "green";
-register char *time;
+int chwepon(struct obj *otmp, int amount) {
+	char *color = (amount < 0) ? "black" : "green";
+	char *time;
 	if(!uwep || uwep->olet != WEAPON_SYM) {
 		strange_feeling(otmp,
 			(amount > 0) ? "Your hands twitch."
