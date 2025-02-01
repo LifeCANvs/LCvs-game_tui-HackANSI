@@ -22,42 +22,71 @@ static char *rip[] = {
 0
 };
 
-static void center(int line, char *text);
+// Big rewrite here to account for the fact we can't modify constant strings
+// these days!  We copy each line to a buffer, then centre a string within it
+// on particular lines.
 
 void outrip(void) {
-	char **dp = rip;
 	char *dpx;
+	char outbuf[BUFSZ];
 	char buf[BUFSZ];
 	int x,y;
+	int line;
+	char *thisline;
+	char *line10 = buf;
+	char *ip,*op;
+
+	y = 8;
 
 	cls();
-	(void) strcpy(buf, plname);
-	buf[16] = 0;
-	center(6, buf);
-	(void) sprintf(buf, "%ld AU", u.ugold);
-	center(7, buf);
-	(void) sprintf(buf, "killed by%s",
-		!strncmp(killer, "the ", 4) ? "" :
-		!strcmp(killer, "starvation") ? "" :
-		index(vowels, *killer) ? " an" : " a");
-	center(8, buf);
-	(void) strcpy(buf, killer);
-	if(strlen(buf) > 16) {
-		int i,i0,i1;
-		i0 = i1 = 0;
-		for(i = 0; i <= 16; i++)
-			if(buf[i] == ' ') i0 = i, i1 = i+1;
-		if(!i0) i0 = i1 = 16;
-		buf[i1 + 16] = 0;
-		center(10, buf+i1);
-		buf[i0] = 0;
-	}
-	center(9, buf);
-	(void) sprintf(buf, "%4d", getyear());
-	center(11, buf);
-	for(y=8; *dp; y++,dp++){
+	for (line = 0; rip[line]; ++line) {
+		strcpy(outbuf, rip[line]);
+		strcat(outbuf, "\n");
+		buf[0] = 0;
+		thisline = buf;
+		switch (line) {
+		default:
+			break;
+		case 6:
+			(void) strcpy(buf, plname);
+			buf[16] = 0;
+			break;
+		case 7:
+			(void) sprintf(buf, "%ld AU", u.ugold);
+			break;
+		case 8:
+			(void) sprintf(buf, "killed by%s",
+				       !strncmp(killer, "the ", 4) ? "" :
+				       !strcmp(killer, "starvation") ? "" :
+				       index(vowels, *killer) ? " an" : " a");
+			break;
+		case 9:
+			(void) strcpy(buf, killer);
+			if(strlen(buf) > 16) {
+				int i,i0,i1;
+				i0 = i1 = 0;
+				for(i = 0; i <= 16; i++)
+					if(buf[i] == ' ') i0 = i, i1 = i+1;
+				if(!i0) i0 = i1 = 16;
+				buf[i1 + 16] = 0;
+				line10 = buf+i1;
+				buf[i0] = 0;
+			}
+			break;
+		case 10:
+			thisline = line10;
+			break;
+		case 11:
+			(void) sprintf(buf, "%4d", getyear());
+			break;
+		}
+
+		ip = buf;
+		op = &outbuf[28 - ((strlen(thisline)+1)/2)];
+		while(*ip) *op++ = *ip++;
+
 		x = 0;
-		dpx = *dp;
+		dpx = outbuf;
 		while(dpx[x]) {
 			while(dpx[x] == ' ') x++;
 			curs(x,y);
@@ -68,13 +97,7 @@ void outrip(void) {
 				(void) putchar(dpx[x++]);
 			}
 		}
+		++y;
 	}
 	getret();
-}
-
-static void center(int line, char *text) {
-	char *ip,*op;
-	ip = text;
-	op = &rip[line][28 - ((strlen(text)+1)/2)];
-	while(*ip) *op++ = *ip++;
 }
