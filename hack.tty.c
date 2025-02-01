@@ -3,8 +3,12 @@
 /* With thanks to the people who sent code for SYSV - hpscdi!jon,
    arnold@ucsf-cgl, wcs@bo95b, cbcephus!pds and others. */
 
-#include	"hack.h"
-#include	<stdio.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <termcap.h>
+
+#include "hack.h"
 
 /*
  * The distinctions here are not BSD - rest but rather USG - rest, as
@@ -59,17 +63,18 @@
 
 #endif /* USG */
 
-extern short ospeed;
 static char erase_char, kill_char;
 static boolean settty_needed = FALSE;
 struct termstruct inittyb, curttyb;
+
+static void setctty(void);
 
 /*
  * Get initial state of terminal, set ospeed (for termcap routines)
  * and switch off tab expansion if necessary.
  * Called by startup() in termcap.c and after returning from ! or ^Z
  */
-gettty(){
+void gettty(void) {
 	if(GTTY(&inittyb) < 0)
 		perror("Hack (gettty)");
 	curttyb = inittyb;
@@ -87,7 +92,7 @@ gettty(){
 }
 
 /* reset terminal to original state */
-settty(s) char *s; {
+void settty(char *s) {
 	clear_screen();
 	end_screen();
 	if(s) printf(s);
@@ -99,16 +104,16 @@ settty(s) char *s; {
 	setioctls();
 }
 
-setctty(){
+static void setctty(void) {
 	if(STTY(&curttyb) < 0)
 		perror("Hack (setctty)");
 }
 
 
-setftty(){
-register int ef = 0;			/* desired value of flags & ECHO */
-register int cf = CBRKON(CBRKMASK);	/* desired value of flags & CBREAK */
-register int change = 0;
+void setftty(void) {
+	int ef = 0;			/* desired value of flags & ECHO */
+	int cf = CBRKON(CBRKMASK);	/* desired value of flags & CBREAK */
+	int change = 0;
 	flags.cbreak = ON;
 	flags.echo = OFF;
 	/* Should use (ECHO|CRMOD) here instead of ECHO */
@@ -136,10 +141,13 @@ register int change = 0;
 
 /* fatal error */
 /*VARARGS1*/
-error(s,x,y) char *s; {
+void error(char *s, ...) {
+	va_list args;
 	if(settty_needed)
 		settty((char *) 0);
-	printf(s,x,y);
+	va_start(args, s);
+	vprintf(s, args);
+	va_end(args);
 	putchar('\n');
 	exit(1);
 }
@@ -150,11 +158,9 @@ error(s,x,y) char *s; {
  * Reading can be interrupted by an escape ('\033') - now the
  * resulting string is "\033".
  */
-getlin(bufp)
-register char *bufp;
-{
-	register char *obufp = bufp;
-	register int c;
+void getlin(char *bufp) {
+	char *obufp = bufp;
+	int c;
 
 	flags.toplin = 2;		/* nonempty, no --More-- required */
 	for(;;) {
@@ -195,13 +201,11 @@ register char *bufp;
 	}
 }
 
-getret() {
+void getret(void) {
 	cgetret("");
 }
 
-cgetret(s)
-register char *s;
-{
+void cgetret(char *s) {
 	putsym('\n');
 	if(flags.standout)
 		standoutbeg();
@@ -215,10 +219,8 @@ register char *s;
 
 char morc;	/* tell the outside world what char he used */
 
-xwaitforspace(s)
-register char *s;	/* chars allowed besides space or return */
-{
-register int c;
+void xwaitforspace(char *s) {
+	int c;
 
 	morc = 0;
 
@@ -234,11 +236,9 @@ register int c;
 	}
 }
 
-char *
-parse()
-{
-	static char inline[COLNO];
-	register foo;
+char *parse(void) {
+	static char in_line[COLNO];
+	int foo;
 
 	flags.move = 1;
 	if(!Invisible) curs_on_u(); else home();
@@ -246,27 +246,26 @@ parse()
 		multi = 10*multi+foo-'0';
 	if(multi) {
 		multi--;
-		save_cm = inline;
+		save_cm = in_line;
 	}
-	inline[0] = foo;
-	inline[1] = 0;
+	in_line[0] = foo;
+	in_line[1] = 0;
 	if(foo == 'f' || foo == 'F'){
-		inline[1] = getchar();
+		in_line[1] = getchar();
 #ifdef QUEST
-		if(inline[1] == foo) inline[2] = getchar(); else
+		if(in_line[1] == foo) in_line[2] = getchar(); else
 #endif /* QUEST */
-		inline[2] = 0;
+		in_line[2] = 0;
 	}
 	if(foo == 'm' || foo == 'M'){
-		inline[1] = getchar();
-		inline[2] = 0;
+		in_line[1] = getchar();
+		in_line[2] = 0;
 	}
 	clrlin();
-	return(inline);
+	return(in_line);
 }
 
-char
-readchar() {
+char readchar(void) {
 	register int sym;
 
 	(void) fflush(stdout);
@@ -293,8 +292,7 @@ readchar() {
 	return((char) sym);
 }
 
-end_of_input()
-{
+void end_of_input(void) {
 	settty("End of input?\n");
 	clearlocks();
 	exit(0);
