@@ -1,17 +1,21 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.rumors.c - version 1.0.3 */
 
-#include	<stdio.h>
-#include	"hack.h"		/* for RUMORFILE and BSD (index) */
-#define	CHARSZ	8			/* number of bits in a char */
-extern long *alloc();
-extern char *index();
-int n_rumors = 0;
-int n_used_rumors = -1;
-char *usedbits;
+#include <stdio.h>
 
-init_rumors(rumf) register FILE *rumf; {
-register int i;
+#include "hack.h"  /* for RUMORFILE and BSD (index) */
+
+#define CHARSZ	8			/* number of bits in a char */
+
+static int n_rumors = 0;
+static int n_used_rumors = -1;
+static char *usedbits;
+
+static int skipline(FILE *rumf);
+static int used(int i);
+
+static void init_rumors(FILE *rumf) {
+	int i;
 	n_used_rumors = 0;
 	while(skipline(rumf)) n_rumors++;
 	rewind(rumf);
@@ -20,26 +24,26 @@ register int i;
 	for( ; i>=0; i--) usedbits[i] = 0;
 }
 
-skipline(rumf) register FILE *rumf; {
-char line[COLNO];
+static int skipline(FILE *rumf) {
+	char line[COLNO];
 	while(1) {
 		if(!fgets(line, sizeof(line), rumf)) return(0);
 		if(index(line, '\n')) return(1);
 	}
 }
 
-outline(rumf) register FILE *rumf; {
-char line[COLNO];
-register char *ep;
+static void outline(FILE *rumf) {
+	char line[COLNO];
+	char *ep;
 	if(!fgets(line, sizeof(line), rumf)) return;
 	if((ep = index(line, '\n')) != 0) *ep = 0;
 	pline("This cookie has a scrap of paper inside! It reads: ");
 	pline(line);
 }
 
-outrumor(){
-register int rn,i;
-register FILE *rumf;
+void outrumor(void) {
+	int rn,i;
+	FILE *rumf;
 	if(n_rumors <= n_used_rumors ||
 	  (rumf = fopen(RUMORFILE, "r")) == (FILE *) 0) return;
 	if(n_used_rumors < 0) init_rumors(rumf);
@@ -58,6 +62,6 @@ none:
 	(void) fclose(rumf);
 }
 
-used(i) register int i; {
+static int used(int i) {
 	return(usedbits[i/CHARSZ] & (1 << (i % CHARSZ)));
 }
