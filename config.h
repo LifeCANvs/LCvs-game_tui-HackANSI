@@ -6,6 +6,7 @@
 #define	CONFIG
 #define	UNIX		/* delete if no fork(), exec() available */
 #define	CHDIR		/* delete if no chdir() available */
+#define TC_OSPEED	/* undef if your termcap has no ospeed */
 
 /*
  * Some include files are in a different place under SYSV

@@ -78,7 +78,9 @@ void gettty(void) {
 	if(GTTY(&inittyb) < 0)
 		perror("Hack (gettty)");
 	curttyb = inittyb;
+#ifdef TC_OSPEED
 	ospeed = OSPEED(inittyb);
+#endif
 	erase_char = inittyb.erase_sym;
 	kill_char = inittyb.kill_sym;
 	getioctls();

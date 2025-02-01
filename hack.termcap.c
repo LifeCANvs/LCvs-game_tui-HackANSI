@@ -233,6 +233,7 @@ void delay_output(void) {
 		/* is this terminfo, or what? */
 		/* tputs("$<50>", 1, xputc); */
 
+#ifdef TC_OSPEED
 	else if(ospeed > 0 || ospeed < SIZE(tmspc10)) if(CM) {
 		/* delay by sending cm(here) an appropriate number of times */
 		int cmlen = strlen(tgoto(CM, curx-1, cury-1));
@@ -243,6 +244,7 @@ void delay_output(void) {
 			i -= cmlen*tmspc10[ospeed];
 		}
 	}
+#endif
 }
 
 void cl_eos(void) {
