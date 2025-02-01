@@ -1,14 +1,15 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.options.c - version 1.0.3 */
 
-#include "config.h"
-#include "hack.h"
-extern char *eos();
+#include <stdlib.h>
+#include <stdio.h>
 
-initoptions()
-{
-	register char *opts;
-	extern char *getenv();
+#include "hack.h"
+
+static void parseoptions(char *opts, boolean from_env);
+
+void initoptions(void) {
+	char *opts;
 
 	flags.time = flags.nonews = flags.notombstone = flags.end_own =
 	flags.standout = flags.nonull = FALSE;
@@ -18,23 +19,20 @@ initoptions()
 	flags.end_around = 4;
 	flags.female = FALSE;			/* players are usually male */
 
-	if(opts = getenv("HACKOPTIONS"))
+	if((opts = getenv("HACKOPTIONS")))
 		parseoptions(opts,TRUE);
 }
 
-parseoptions(opts, from_env)
-register char *opts;
-boolean from_env;
-{
-	register char *op,*op2;
+static void parseoptions(char *opts, boolean from_env) {
+	char *op,*op2;
 	unsigned num;
 	boolean negated;
 
-	if(op = index(opts, ',')) {
+	if((op = index(opts, ','))) {
 		*op++ = 0;
 		parseoptions(op, from_env);
 	}
-	if(op = index(opts, ' ')) {
+	if((op = index(opts, ' '))) {
 		op2 = op;
 		while(*op++)
 			if(*op != ' ') *op2++ = *op;
@@ -171,8 +169,7 @@ bad:
 	getret();
 }
 
-doset()
-{
+int doset(void) {
 	char buf[BUFSZ];
 
 	pline("What options do you want to set? ");
