@@ -3,7 +3,7 @@
 
 #include "hack.h"
 
-char *shkliquors[] = {
+static char *shkliquors[] = {
 	/* Ukraine */
 	"Njezjin", "Tsjernigof", "Gomel", "Ossipewsk", "Gorlowka",
 	/* N. Russia */
@@ -18,7 +18,7 @@ char *shkliquors[] = {
 	0
 };
 
-char *shkbooks[] = {
+static char *shkbooks[] = {
 	/* Eire */
 	"Skibbereen", "Kanturk", "Rath Luirc", "Ennistymon", "Lahinch",
 	"Loughrea", "Croagh", "Maumakeogh", "Ballyjamesduff",
@@ -30,7 +30,7 @@ char *shkbooks[] = {
 	0
 };
 
-char *shkarmors[] = {
+static char *shkarmors[] = {
 	/* Turquie */
 	"Demirci", "Kalecik", "Boyabai", "Yildizeli", "Gaziantep",
 	"Siirt", "Akhalataki", "Tirebolu", "Aksaray", "Ermenak",
@@ -41,7 +41,7 @@ char *shkarmors[] = {
 	0
 };
 
-char *shkwands[] = {
+static char *shkwands[] = {
 	/* Wales */
 	"Yr Wyddgrug", "Trallwng", "Mallwyd", "Pontarfynach",
 	"Rhaeader", "Llandrindod", "Llanfair-ym-muallt",
@@ -55,7 +55,7 @@ char *shkwands[] = {
 	0
 };
 
-char *shkrings[] = {
+static char *shkrings[] = {
 	/* Hollandse familienamen */
 	"Feyfer", "Flugi", "Gheel", "Havic", "Haynin", "Hoboken",
 	"Imbyze", "Juyn", "Kinsky", "Massis", "Matray", "Moy",
@@ -68,7 +68,7 @@ char *shkrings[] = {
 	0
 };
 
-char *shkfoods[] = {
+static char *shkfoods[] = {
 	/* Indonesia */
 	"Djasinga", "Tjibarusa", "Tjiwidej", "Pengalengan",
 	"Bandjar", "Parbalingga", "Bojolali", "Sarangan",
@@ -80,7 +80,7 @@ char *shkfoods[] = {
 	0
 };
 
-char *shkweapons[] = {
+static char *shkweapons[] = {
 	/* Perigord */
 	"Voulgezac", "Rouffiac", "Lerignac", "Touverac", "Guizengeard",
 	"Melac", "Neuvicq", "Vanzac", "Picq", "Urignac", "Corignac",
@@ -91,7 +91,7 @@ char *shkweapons[] = {
 	0
 };
 
-char *shkgeneral[] = {
+static char *shkgeneral[] = {
 	/* Suriname */
 	"Hebiwerie", "Possogroenoe", "Asidonhopo", "Manlobbi",
 	"Adjama", "Pakka Pakka", "Kabalebo", "Wonotobo",
@@ -109,7 +109,7 @@ char *shkgeneral[] = {
 	0
 };
 
-struct shk_nx {
+static struct shk_nx {
 	char x;
 	char **xn;
 } shk_nx[] = {
@@ -123,10 +123,10 @@ struct shk_nx {
 	{ 0,		shkgeneral }
 };
 
-findname(nampt, let) char *nampt; char let; {
-register struct shk_nx *p = shk_nx;
-register char **q;
-register int i;
+void findname(char *nampt, char let) {
+	struct shk_nx *p = shk_nx;
+	char **q;
+	int i;
 	while(p->x && p->x != let) p++;
 	q = p->xn;
 	for(i=0; i<dlevel; i++) if(!q[i]){
