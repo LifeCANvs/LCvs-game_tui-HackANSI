@@ -1,10 +1,12 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* def.objects.h - version 1.0.3 */
 
+/* The objects[], obj_symbols[] and bases[] arrays are actually defined here,
+ * so it's important this file is only ever included once.
+ *
+ * Included into hack.o_init.c for hack, and also used by makedefs. */
+
 /* objects have letter " % ) ( 0 _ ` [ ! ? / = * */
-#include "config.h"
-#include "def.objclass.h"
-#define	NULL	(char *)0
 
 struct objclass objects[] = {
 

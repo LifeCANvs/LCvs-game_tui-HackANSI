@@ -47,10 +47,6 @@ struct monst {
 
 #define newmonst(xl)	(struct monst *) alloc((unsigned)(xl) + sizeof(struct monst))
 
-extern struct monst *fmon;
-extern struct monst *fallen_down;
-struct monst *m_at();
-
 /* these are in mspeed */
 #define MSLOW 1 /* slow monster */
 #define MFAST 2 /* speeded monster */

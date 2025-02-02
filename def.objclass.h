@@ -31,8 +31,6 @@ struct objclass {
 #define	g_val		oc_oi	/* for gems: value on exit */
 };
 
-extern struct objclass objects[];
-
 /* definitions of all object-symbols */
 
 #define	ILLOBJ_SYM	'\\'

@@ -7,7 +7,6 @@ struct permonst {
 	unsigned pxlth;
 };
 
-extern struct permonst mons[];
 #define PM_ACID_BLOB	&mons[7]
 #define	PM_ZOMBIE	&mons[13]
 #define	PM_PIERCER	&mons[17]

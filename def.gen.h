@@ -10,6 +10,4 @@ struct gen {
 #define	SEEN	040
 #define	ONCE	0100
 };
-extern struct gen *fgold, *ftrap;
-struct gen *g_at();
 #define newgen()	(struct gen *) alloc(sizeof(struct gen))

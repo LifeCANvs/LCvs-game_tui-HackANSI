@@ -9,8 +9,6 @@ struct trap {
 	unsigned once:1;
 };
 
-extern struct trap *ftrap;
-struct trap *t_at();
 #define newtrap()	(struct trap *) alloc(sizeof(struct trap))
 
 /* various kinds of traps */

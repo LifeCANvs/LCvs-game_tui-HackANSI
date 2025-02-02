@@ -41,8 +41,6 @@ struct obj {
 				   is flexible; amount for tmp gold objects */
 };
 
-extern struct obj *fobj;
-
 #define newobj(xl)	(struct obj *) alloc((unsigned)(xl) + sizeof(struct obj))
 #define	ONAME(otmp)	((char *) otmp->oextra)
 #define	OGOLD(otmp)	(otmp->oextra[0])

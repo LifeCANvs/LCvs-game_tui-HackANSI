@@ -7,6 +7,4 @@ struct gold {
 	long amount;
 };
 
-extern struct gold *fgold;
-struct gold *g_at();
 #define newgold()	(struct gold *) alloc(sizeof(struct gold))

@@ -7,10 +7,8 @@ struct mkroom {
 };
 
 #define	MAXNROFROOMS	15
-extern struct mkroom rooms[MAXNROFROOMS+1];
 
 #define	DOORMAX	100
-extern coord doors[DOORMAX];
 
 /* various values of rtype */
 /* 0: ordinary room; 8-15: various shops */

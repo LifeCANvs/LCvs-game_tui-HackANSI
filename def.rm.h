@@ -49,4 +49,3 @@ struct rm {
 	unsigned seen:1;
 	unsigned lit:1;
 };
-extern struct rm levl[COLNO][ROWNO];
