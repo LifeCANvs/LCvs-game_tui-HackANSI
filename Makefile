@@ -1,13 +1,30 @@
 # Hack or Quest Makefile.
 
+FUZIX_ROOT ?= $(HOME)/src/fuzix
+TARGET ?= coco3
+include $(FUZIX_ROOT)/Kernel/platform/platform-$(TARGET)/target.mk
+ifeq ($(USERCPU),)
+        USERCPU = $(CPU)
+endif
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
+export FUZIX_ROOT
+
+
+HOST_CC = gcc
+HOST_CFLAGS = -O -g
+HOST_CPPFLAGS =
+
+OPT = -O
+hack.u_init.o: OPT = -O0
+
 # on some systems the termcap library is in -ltermcap
-TERMLIB = -ltermcap
+TERMLIB = -ltermcap$(USERCPU)
 
 
 # make hack
 GAME = hack
 GAMEDIR = /usr/games/lib/hackdir
-CFLAGS = -g
+#CFLAGS ?= -g
 HACKCSRC = hack.Decl.c\
 	hack.apply.c hack.bones.c hack.c hack.cmd.c hack.do.c\
 	hack.do_name.c hack.do_wear.c hack.dog.c hack.eat.c hack.end.c\
@@ -55,14 +72,17 @@ HOBJ = hack.Decl.o hack.apply.o hack.bones.o hack.o hack.cmd.o hack.do.o\
 
 $(GAME):	$(HOBJ) Makefile
 	@echo "Loading ..."
-	$(CC) $(CFLAGS) $(HOBJ) $(LDFLAGS) $(TERMLIB) -o $(GAME)
+	$(LINKER) $(LINKER_OPT) -o $(GAME) $(CRT0) $(HOBJ) $(LINKER_TAIL) $(TERMLIB)
+
+$(HOBJ): %.o: %.c
+	$(CC) $(CFLAGS) $(OPT) $(CPPFLAGS) -o $@ -c $<
 
 .PHONY: all
 all:	$(GAME) lint
 	@echo "Done."
 
 makedefs:	makedefs.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o makedefs makedefs.c
+	$(HOST_CC) $(HOST_CPPFLAGS) $(HOST_CFLAGS) -o makedefs makedefs.c
 
 
 hack.onames.h:	makedefs def.objects.h
