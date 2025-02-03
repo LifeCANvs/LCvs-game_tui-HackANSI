@@ -57,6 +57,7 @@ $(GAME):	$(HOBJ) Makefile
 	@echo "Loading ..."
 	@ld -X -o $(GAME) /lib/crt0.o $(HOBJ) $(TERMLIB) -lc
 
+.PHONY: all
 all:	$(GAME) lint
 	@echo "Done."
 
@@ -67,6 +68,8 @@ makedefs:	makedefs.c
 hack.onames.h:	makedefs def.objects.h
 	./makedefs > hack.onames.h
 
+
+.PHONY: lint
 lint:
 # lint cannot have -p here because (i) capitals are meaningful:
 # [Ww]izard, (ii) identifiers may coincide in the first six places:
@@ -76,6 +79,7 @@ lint:
 	@lint -axbh -DLINT $(HACKCSRC) | sed '/_flsbuf/d'
 
 
+.PHONY: diff
 diff:
 	@- for i in $(SOURCES) $(AUX) ; do \
 		cmp -s $$i $D/$$i || \
@@ -89,6 +93,7 @@ distribution: Makefile
 # the distribution directory also contains the empty files perm and record.
 
 
+.PHONY: install
 install:
 	rm -f $(GAMEDIR)/$(GAME)
 	cp $(GAME) $(GAMEDIR)/$(GAME)
@@ -96,10 +101,12 @@ install:
 	rm -f $(GAMEDIR)/bones*
 #	cp hack.6 /usr/man/man6
 
+.PHONY: clean
 clean:
 	rm -f *.o
 
 
+.PHONY: depend
 depend:
 # For the moment we are lazy and disregard /usr/include files because
 # the sources contain them conditionally. Perhaps we should use cpp.
