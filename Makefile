@@ -135,69 +135,68 @@ depend:
 	@echo '# DEPENDENCIES MUST END AT END OF FILE' >> Makefile
 	@echo '# IF YOU PUT STUFF HERE IT WILL GO AWAY' >> Makefile
 	@echo '# see make depend above' >> Makefile
-	- diff Makefile Makefile.bak
+	-diff Makefile Makefile.bak
 	@rm -f Makefile.bak
 
 # DO NOT DELETE THIS LINE
 
-hack.Decl.o:  hack.h def.mkroom.h
-hack.apply.o:  hack.h def.edog.h def.mkroom.h
+hack.Decl.o:  hack.h
+hack.apply.o:  hack.h def.edog.h
 hack.bones.o:  hack.h
 hack.o:  hack.h
 hack.cmd.o:  hack.h def.func_tab.h
 hack.do.o:  hack.h
 hack.do_name.o:  hack.h
 hack.do_wear.o:  hack.h
-hack.dog.o:  hack.h hack.mfndpos.h def.edog.h def.mkroom.h
+hack.dog.o:  hack.h hack.mfndpos.h def.edog.h
 hack.eat.o:  hack.h
 hack.end.o:  hack.h
 hack.engrave.o:  hack.h
 hack.fight.o:  hack.h
-hack.invent.o:  hack.h def.wseg.h
+hack.invent.o:  hack.h
 hack.ioctl.o:  config.h
-hack.lev.o:  hack.h def.mkroom.h def.wseg.h
+hack.lev.o:  hack.h
 hack.main.o:  hack.h
 hack.makemon.o:  hack.h
 hack.mhitu.o:  hack.h
-hack.mklev.o:  hack.h def.mkroom.h
-hack.mkmaze.o:  hack.h def.mkroom.h
+hack.mklev.o:  hack.h
+hack.mkmaze.o:  hack.h
 hack.mkobj.o:  hack.h
-hack.mkshop.o:  hack.h def.mkroom.h def.eshk.h
+hack.mkshop.o:  hack.h def.eshk.h
 hack.mon.o:  hack.h hack.mfndpos.h
 hack.monst.o:  hack.h def.eshk.h
-hack.o_init.o:  config.h def.objects.h hack.onames.h
+hack.o_init.o:  hack.h def.objects.h
 hack.objnam.o:  hack.h
-hack.options.o:  config.h hack.h
+hack.options.o:  hack.h
 hack.pager.o:  hack.h
 hack.potion.o:  hack.h
-hack.pri.o:  hack.h def.wseg.h
+hack.pri.o:  hack.h
 hack.read.o:  hack.h
 hack.rip.o:  hack.h
 hack.rumors.o:  hack.h
 hack.save.o:  hack.h
 hack.search.o:  hack.h
-hack.shk.o:  hack.h hack.mfndpos.h def.mkroom.h def.eshk.h
+hack.shk.o:  hack.h hack.mfndpos.h def.eshk.h
 hack.shknam.o:  hack.h
 hack.steal.o:  hack.h
-hack.termcap.o:  config.h def.flag.h
+hack.termcap.o:  hack.h
 hack.timeout.o:  hack.h
 hack.topl.o:  hack.h
 hack.track.o:  hack.h
-hack.trap.o:  hack.h def.mkroom.h
+hack.trap.o:  hack.h
 hack.tty.o:  hack.h
-hack.unix.o:  hack.h def.mkroom.h
+hack.unix.o:  hack.h
 hack.u_init.o:  hack.h
-hack.vault.o:  hack.h def.mkroom.h
+hack.vault.o:  hack.h
 hack.wield.o:  hack.h
 hack.wizard.o:  hack.h
-hack.worm.o:  hack.h def.wseg.h
+hack.worm.o:  hack.h
 hack.worn.o:  hack.h
 hack.zap.o:  hack.h
-hack.version.o:  date.h
-hack.h:  config.h def.objclass.h def.monst.h def.gold.h def.trap.h def.obj.h def.flag.h def.rm.h def.permonst.h hack.onames.h
+hack.version.o:  hack.h date.h
+alloc.o:  hack.h
+hack.h:  config.h def.objclass.h def.monst.h def.gold.h def.trap.h def.obj.h def.flag.h def.mkroom.h def.rm.h def.permonst.h def.wseg.h hack.onames.h
 			touch hack.h
-def.objects.h:  config.h def.objclass.h
-			touch def.objects.h
 # DEPENDENCIES MUST END AT END OF FILE
 # IF YOU PUT STUFF HERE IT WILL GO AWAY
 # see make depend above
