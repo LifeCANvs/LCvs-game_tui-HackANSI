@@ -1,23 +1,28 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.o_init.c - version 1.0.3 */
 
-#include	"config.h"		/* for typedefs */
-#include	"def.objects.h"
-#include	"hack.onames.h"		/* for LAST_GEM */
-extern char *index();
+#include <stdio.h>
 
-int
-letindex(let) register char let; {
-register int i = 0;
-register char ch;
+#include "hack.h"
+
+/* Including def.objects.h actually defines arrays, it's important that it's
+ * only ever included here. */
+#include "def.objects.h"
+
+static void setgemprobs(void);
+static int interesting_to_discover(int i);
+
+int letindex(char let) {
+	int i = 0;
+	char ch;
 	while((ch = obj_symbols[i++]) != 0)
 		if(ch == let) return(i);
 	return(0);
 }
 
-init_objects(){
-register int i, j, first, last, sum, end;
-register char let, *tmp;
+void init_objects(void) {
+	int i, j, first, last, sum, end;
+	char let, *tmp;
 	/* init base; if probs given check that they add up to 100, 
 	   otherwise compute probs; shuffle descriptions */
 	end = SIZE(objects);
@@ -62,19 +67,17 @@ register char let, *tmp;
 	}
 }
 
-probtype(let) register char let; {
-register int i = bases[letindex(let)];
-register int prob = rn2(100);
+int probtype(char let) {
+	int i = bases[letindex(let)];
+	int prob = rn2(100);
 	while((prob -= objects[i].oc_prob) >= 0) i++;
 	if(objects[i].oc_olet != let || !objects[i].oc_name)
 		panic("probtype(%c) error, i=%d", let, i);
 	return(i);
 }
 
-setgemprobs()
-{
-	register int j,first;
-	extern xchar dlevel;
+static void setgemprobs(void) {
+	int j,first;
 
 	first = bases[letindex(GEM_SYM)];
 
@@ -90,16 +93,14 @@ setgemprobs()
 		objects[j].oc_prob = (20+j-first)/(LAST_GEM-first);
 }
 
-oinit()			/* level dependent initialization */
-{
+void oinit(void) {
+	/* level dependent initialization */
 	setgemprobs();
 }
 
-extern long *alloc();
-
-savenames(fd) register fd; {
-register int i;
-unsigned len;
+void savenames(int fd) {
+	int i;
+	unsigned len;
 	bwrite(fd, (char *) bases, sizeof bases);
 	bwrite(fd, (char *) objects, sizeof objects);
 	/* as long as we use only one version of Hack/Quest we
@@ -114,9 +115,9 @@ unsigned len;
 	}
 }
 
-restnames(fd) register fd; {
-register int i;
-unsigned len;
+void restnames(int fd) {
+	int i;
+	unsigned len;
 	mread(fd, (char *) bases, sizeof bases);
 	mread(fd, (char *) objects, sizeof objects);
 	for(i=0; i < SIZE(objects); i++) if(objects[i].oc_uname) {
@@ -126,11 +127,10 @@ unsigned len;
 	}
 }
 
-dodiscovered()				/* free after Robert Viduya */
-{
-    extern char *typename();
-    register int i, end;
-    int	ct = 0;
+int dodiscovered(void) {
+	/* free after Robert Viduya */
+    int i, end;
+    int ct = 0;
 
     cornline(0, "Discoveries");
 
@@ -150,9 +150,7 @@ dodiscovered()				/* free after Robert Viduya */
     return(0);
 }
 
-interesting_to_discover(i)
-register int i;
-{
+static int interesting_to_discover(int i) {
     return(
 	objects[i].oc_uname != NULL ||
 	 (objects[i].oc_name_known && objects[i].oc_descr != NULL)
