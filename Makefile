@@ -103,7 +103,7 @@ install:
 
 .PHONY: clean
 clean:
-	rm -f *.o
+	rm -f *.o hack makedefs
 
 
 .PHONY: depend
