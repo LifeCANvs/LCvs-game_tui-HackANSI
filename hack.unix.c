@@ -55,6 +55,8 @@ char *getdate(void) {
 	static char datestr[7];
 	struct tm *lt = getlt();
 
+	if (lt->tm_year >= 100)
+		lt->tm_year -= 100;
 	(void) sprintf(datestr, "%2d%2d%2d",
 		lt->tm_year, lt->tm_mon + 1, lt->tm_mday);
 	if(datestr[2] == ' ') datestr[2] = '0';
