@@ -1,8 +1,13 @@
 /* Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985. */
 /* hack.main.c - version 1.0.3 */
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "hack.h"
 
 #ifdef QUEST
@@ -11,15 +16,9 @@
 #define	gamename	"hack"
 #endif /* QUEST */
 
-extern char *getlogin(), *getenv();
-extern char plname[PL_NSIZ], pl_character[PL_CSIZ];
-
 int (*afternmv)();
 int (*occupation)();
 char *occtxt;			/* defined when occupation != NULL */
-
-int done1();
-int hangup();
 
 int hackpid;				/* current pid */
 int locknum;				/* max num of players */
@@ -30,16 +29,14 @@ char SAVEF[PL_NSIZ + 11] = "save/";	/* save/99999player */
 char *hname;		/* name of the game (argv[0] of call) */
 char obuf[BUFSIZ];	/* BUFSIZ is defined in stdio.h */
 
-extern char *nomovemsg;
-extern long wailmsg;
-
-main(argc,argv)
-int argc;
-char *argv[];
-{
-	register int fd;
 #ifdef CHDIR
-	register char *dir;
+static void chdirx(char *dir, boolean wr);
+#endif
+
+int main(int argc, char **argv) {
+	int fd;
+#ifdef CHDIR
+	char *dir;
 #endif /* CHDIR */
 
 	hname = argv[0];
@@ -81,7 +78,7 @@ char *argv[];
 	 * Note that we trust him here; it is possible to play under
 	 * somebody else's name.
 	 */
-	{ register char *s;
+	{ char *s;
 
 	  initoptions();
 	  if(!*plname && (s = getenv("USER")))
@@ -205,21 +202,20 @@ char *argv[];
 		getlock();	/* sets lock if locknum != 0 */
 #ifdef WIZARD
 	} else {
-		register char *sfoo;
+		char *sfoo;
 		(void) strcpy(lock,plname);
-		if(sfoo = getenv("MAGIC"))
+		if((sfoo = getenv("MAGIC")))
 			while(*sfoo) {
 				switch(*sfoo++) {
 				case 'n': (void) srand(*sfoo++);
 					break;
 				}
 			}
-		if(sfoo = getenv("GENOCIDED")){
+		if((sfoo = getenv("GENOCIDED"))){
 			if(*sfoo == '!'){
 				extern struct permonst mons[CMNUM+2];
-				extern char genocided[], fut_geno[];
-				register struct permonst *pm = mons;
-				register char *gp = genocided;
+				struct permonst *pm = mons;
+				char *gp = genocided;
 
 				while(pm < mons+CMNUM+2){
 					if(!index(sfoo, pm->mlet))
@@ -263,8 +259,8 @@ not_recovered:
 		setsee();
 		flags.botlx = 1;
 		makedog();
-		{ register struct monst *mtmp;
-		  if(mtmp = m_at(u.ux, u.uy)) mnexto(mtmp);	/* riv05!a3 */
+		{ struct monst *mtmp;
+		  if((mtmp = m_at(u.ux, u.uy))) mnexto(mtmp);	/* riv05!a3 */
 		}
 		seemons();
 #ifdef NEWS
@@ -397,11 +393,9 @@ not_recovered:
 	}
 }
 
-glo(foo)
-register foo;
-{
+void glo(int foo) {
 	/* construct the string  xlock.n  */
-	register char *tf;
+	char *tf;
 
 	tf = lock;
 	while(*tf && *tf != '.') tf++;
@@ -413,8 +407,8 @@ register foo;
  * explicitly (-w implies wizard) or by askname.
  * It may still contain a suffix denoting pl_character.
  */
-askname(){
-register int c,ct;
+void askname(void) {
+	int c,ct;
 	printf("\nWho are you? ");
 	(void) fflush(stdout);
 	ct = 0;
@@ -434,19 +428,16 @@ register int c,ct;
 }
 
 /*VARARGS1*/
-impossible(s,x1,x2)
-register char *s;
-{
-	pline(s,x1,x2);
+void impossible(char *s, ...) {
+	va_list args;
+	va_start(args, s);
+	vpline(s, args);
+	va_end(args);
 	pline("Program in disorder - perhaps you'd better Quit.");
 }
 
 #ifdef CHDIR
-static
-chdirx(dir, wr)
-char *dir;
-boolean wr;
-{
+static void chdirx(char *dir, boolean wr) {
 
 #ifdef SECURE
 	if(dir					/* User specified directory? */
@@ -473,7 +464,7 @@ boolean wr;
 	/* perhaps we should also test whether . is writable */
 	/* unfortunately the access systemcall is worthless */
 	if(wr) {
-	    register fd;
+	    int fd;
 
 	    if(dir == NULL)
 		dir = ".";
@@ -486,8 +477,7 @@ boolean wr;
 }
 #endif /* CHDIR */
 
-stop_occupation()
-{
+void stop_occupation(void) {
 	if(occupation) {
 		pline("You stop %s.", occtxt);
 		occupation = 0;
