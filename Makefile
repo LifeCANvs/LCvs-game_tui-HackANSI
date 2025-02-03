@@ -55,14 +55,14 @@ HOBJ = hack.Decl.o hack.apply.o hack.bones.o hack.o hack.cmd.o hack.do.o\
 
 $(GAME):	$(HOBJ) Makefile
 	@echo "Loading ..."
-	@ld -X -o $(GAME) /lib/crt0.o $(HOBJ) $(TERMLIB) -lc
+	$(CC) $(CFLAGS) $(HOBJ) $(LDFLAGS) $(TERMLIB) -o $(GAME)
 
 .PHONY: all
 all:	$(GAME) lint
 	@echo "Done."
 
 makedefs:	makedefs.c
-	cc -o makedefs makedefs.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o makedefs makedefs.c
 
 
 hack.onames.h:	makedefs def.objects.h
